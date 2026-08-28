@@ -21,16 +21,16 @@ return [
     // Onglet « infos » : cle, valeur
     'csv_infos' => 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS03y970vwCxMbMjc9L2w15Tkff2lPLt90zWlQuyHoqPoJUAWn0ijor-ARavhDIZcZKLi5wKJU70q61/pub?gid=93767807&single=true&output=csv',
 
-    // Où écrire la page.
+    // Où écrire les pages : index.html et carte.html.
     //
-    // En local, laissez la ligne commentée : la sortie va dans public/carte.html,
+    // En local, laissez la ligne commentée : la sortie va dans public/,
     // à côté du générateur.
     //
     // Sur l'hébergement, le générateur vit dans ~/auguste/ et le site dans
     // ~/public_html/ : les deux ne sont plus voisins, il faut donc le dire.
     // Remplacez « xxxxx » par le nom de votre compte cPanel.
     //
-    // 'sortie_html' => '/home/xxxxx/public_html/carte.html',
+    // 'sortie_dossier' => '/home/xxxxx/public_html',
 
     // Secret de public/publier.php. Sans lui, l'endpoint refuse de tourner.
     //

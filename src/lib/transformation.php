@@ -50,6 +50,8 @@ function transformer_carte(array $lignes): array
             'prix' => formater_prix($champs['prix']),
             'allergenes' => decouper_allergenes($champs['allergenes']),
             'ordre' => (int) trim($champs['ordre']),
+            // Colonne facultative : absente du Sheet, la clé n'existe pas.
+            'vedette' => ligne_active($champs['vedette'] ?? ''),
         ];
     }
 
@@ -65,10 +67,43 @@ function transformer_carte(array $lignes): array
 
     return [
         'categories' => $categories,
+        'vedettes' => choisir_vedettes($categories),
         'lues' => count($lignes),
         'actives' => $actives,
         'ignorees' => count($lignes) - $actives,
     ];
+}
+
+/**
+ * Les plats mis en avant sur la page d'accueil.
+ *
+ * Si personne n'a coché la colonne « vedette », on prend le premier plat de
+ * chaque catégorie : l'accueil montre toujours quelque chose, et le
+ * restaurateur reprend la main dès qu'il coche une case.
+ *
+ * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
+ * @return list<array<string, mixed>>
+ */
+function choisir_vedettes(array $categories): array
+{
+    $choisies = [];
+    $premiers = [];
+
+    foreach ($categories as $categorie) {
+        foreach ($categorie['plats'] as $rang => $plat) {
+            $plat['categorie'] = $categorie['nom'];
+
+            if ($plat['vedette']) {
+                $choisies[] = $plat;
+            }
+
+            if ($rang === 0) {
+                $premiers[] = $plat;
+            }
+        }
+    }
+
+    return $choisies !== [] ? $choisies : $premiers;
 }
 
 /**

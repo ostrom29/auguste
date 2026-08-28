@@ -13,6 +13,15 @@ const CARTE_ENTETES = ['categorie', 'nom', 'description', 'prix', 'allergenes', 
 const INFOS_ENTETES = ['cle', 'valeur'];
 
 /**
+ * Colonnes facultatives : leur absence ne bloque pas la publication.
+ *
+ * « vedette » désigne les plats mis en avant sur la page d'accueil. Tant que
+ * la colonne n'existe pas dans le Sheet, l'accueil se rabat sur le premier
+ * plat de chaque catégorie.
+ */
+const CARTE_ENTETES_FACULTATIFS = ['vedette'];
+
+/**
  * Clés de l'onglet « infos » attendues par le gabarit. Leur absence n'empêche
  * pas la publication : la section correspondante est simplement omise.
  */

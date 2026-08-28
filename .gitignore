@@ -7,6 +7,11 @@
 
 # HTML généré : jamais commité
 /public/carte.html
+/public/index.html
+
+# Originaux des images : lourds, et retraités par outils/images.py
+# vers public/img/, qui est versionné.
+/medias-sources/
 
 # Archives de déploiement, reconstruites par outils/paquet.py
 /dist/

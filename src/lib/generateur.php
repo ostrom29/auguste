@@ -29,7 +29,7 @@ require_once __DIR__ . '/rendu.php';
  *     avertissements: list<string>,
  *     lues: int, actives: int, ignorees: int,
  *     categories: list<array{nom: string, plats: int}>,
- *     sortie: string, octets: int
+ *     sortie: string, pages: list<string>, octets: int
  * }
  */
 function generer(string $source, string $racine): array
@@ -44,12 +44,14 @@ function generer(string $source, string $racine): array
         'ignorees' => 0,
         'categories' => [],
         'sortie' => '',
+        'pages' => [],
         'octets' => 0,
     ];
 
     try {
         $config = config_charger($racine);
-        $resultat['sortie'] = config_exiger($config, 'sortie_html', 'pour savoir où écrire la page');
+        $dossier = config_exiger($config, 'sortie_dossier', 'pour savoir où écrire les pages');
+        $resultat['sortie'] = $dossier;
 
         $brut = source_charger($source, $racine, $config);
         $resultat['source'] = $brut['description'];
@@ -70,8 +72,16 @@ function generer(string $source, string $racine): array
         $carte = transformer_carte($carteCsv['lignes']);
         $infos = transformer_infos($infosCsv['lignes']);
 
-        // 3. Rendre, puis écrire.
-        $resultat['octets'] = ecrire($resultat['sortie'], rendre_page($carte['categories'], $infos));
+        // 3. Rendre les deux pages, puis les écrire.
+        $pages = [
+            'index.html' => rendre_accueil($carte['vedettes'], $infos),
+            'carte.html' => rendre_carte($carte['categories'], $infos),
+        ];
+
+        foreach ($pages as $fichier => $html) {
+            $resultat['octets'] += ecrire($dossier . '/' . $fichier, $html);
+            $resultat['pages'][] = $fichier;
+        }
 
         $resultat['lues'] = $carte['lues'];
         $resultat['actives'] = $carte['actives'];

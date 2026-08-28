@@ -141,7 +141,8 @@ function resumer(array $resultat): void
     );
     printf("Catégories : %s\n", implode(' · ', $detail));
     printf(
-        "Écrit      : %s (%s octets)\n",
+        "Écrit      : %s dans %s (%s octets)\n",
+        implode(', ', $resultat['pages']),
         $resultat['sortie'],
         number_format($resultat['octets'], 0, ',', ' ')
     );

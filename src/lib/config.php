@@ -12,7 +12,7 @@ declare(strict_types=1);
  *
  * @return array{
  *     csv_carte: string, csv_infos: string,
- *     sortie_html: string, secret_publication: string
+ *     sortie_dossier: string, secret_publication: string
  * }
  */
 function config_charger(string $racine): array
@@ -20,10 +20,10 @@ function config_charger(string $racine): array
     $defauts = [
         'csv_carte' => '',
         'csv_infos' => '',
-        // En local, la sortie est à côté du générateur. Sur l'hébergement,
-        // public_html/ n'est pas dans le dossier de l'application : le chemin
-        // est alors donné explicitement dans config.php.
-        'sortie_html' => $racine . '/public/carte.html',
+        // Le dossier où sont écrites les pages. En local c'est public/, à côté
+        // du générateur ; sur l'hébergement, public_html/ n'est pas dans le
+        // dossier de l'application et le chemin est donné explicitement.
+        'sortie_dossier' => $racine . '/public',
         'secret_publication' => '',
     ];
 
