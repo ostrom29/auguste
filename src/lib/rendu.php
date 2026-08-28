@@ -25,6 +25,22 @@ const JOURS_SEMAINE = [
 const NOM_PAR_DEFAUT = 'Chez Auguste';
 const ACCROCHE_PAR_DEFAUT = 'Bouillon-brasserie';
 
+/**
+ * Lit une info du Sheet, en repliant sur un défaut.
+ *
+ * Une clé présente mais vide vaut une clé absente : dans un tableur, effacer
+ * une cellule laisse la ligne en place. C'est le cas le plus fréquent, et
+ * l'opérateur `??` seul ne l'attrape pas — il ne teste que l'absence.
+ *
+ * @param array<string, string> $infos
+ */
+function info(array $infos, string $cle, string $defaut = ''): string
+{
+    $valeur = trim($infos[$cle] ?? '');
+
+    return $valeur !== '' ? $valeur : $defaut;
+}
+
 /** La photo d'ambiance, dans ses trois largeurs préparées par outils/images.py. */
 const SALLE_LARGEURS = [340, 480, 679];
 const SALLE_HAUTEUR = 452;
@@ -41,11 +57,11 @@ const SALLE_HAUTEUR = 452;
  */
 function rendre_accueil(array $vedettes, array $infos): string
 {
-    $nom = $infos['nom'] ?? NOM_PAR_DEFAUT;
+    $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
 
     return document(
         'accueil',
-        e($nom) . ' — ' . e($infos['accroche'] ?? ACCROCHE_PAR_DEFAUT),
+        e($nom) . ' — ' . e(info($infos, 'accroche', ACCROCHE_PAR_DEFAUT)),
         implode("\n", array_filter([
             rendre_entete($infos, 'accueil'),
             rendre_banniere($infos),
@@ -67,7 +83,7 @@ function rendre_accueil(array $vedettes, array $infos): string
  */
 function rendre_carte(array $categories, array $infos): string
 {
-    $nom = $infos['nom'] ?? NOM_PAR_DEFAUT;
+    $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
     $sections = [];
 
     foreach ($categories as $categorie) {
@@ -133,8 +149,8 @@ function document(string $classe, string $titre, string $corps): string
  */
 function rendre_entete(array $infos, string $page): string
 {
-    $nom = $infos['nom'] ?? NOM_PAR_DEFAUT;
-    $accroche = $infos['accroche'] ?? ACCROCHE_PAR_DEFAUT;
+    $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
+    $accroche = info($infos, 'accroche', ACCROCHE_PAR_DEFAUT);
 
     // Sur l'accueil le logo est le titre de la page ; sur la carte, il n'est
     // qu'un lien de retour, et le titre revient à la carte elle-même.
@@ -164,10 +180,10 @@ function rendre_entete(array $infos, string $page): string
  */
 function rendre_banniere(array $infos): string
 {
-    $legende = $infos['legende_photo'] ?? '';
+    $legende = info($infos, 'legende_photo');
 
-    // Pas d'image préparée : on n'affiche pas de cadre vide.
-    if (($infos['photo'] ?? 'salle') === '') {
+    // Échappatoire : « photo » à « non » dans le Sheet retire la bannière.
+    if (mb_strtolower(info($infos, 'photo', 'oui'), 'UTF-8') === 'non') {
         return '';
     }
 
@@ -208,11 +224,13 @@ function rendre_banniere(array $infos): string
  */
 function rendre_message(array $infos): string
 {
-    if (($infos['message'] ?? '') === '') {
+    $message = info($infos, 'message');
+
+    if ($message === '') {
         return '';
     }
 
-    return '    <p class="message" role="status">' . e($infos['message']) . '</p>';
+    return '    <p class="message" role="status">' . e($message) . '</p>';
 }
 
 /**
@@ -220,17 +238,20 @@ function rendre_message(array $infos): string
  */
 function rendre_coordonnees(array $infos): string
 {
+    $adresse = info($infos, 'adresse');
+    $acces = info($infos, 'acces');
+    $telephone = info($infos, 'telephone');
     $lignes = [];
 
-    if (($infos['adresse'] ?? '') !== '') {
-        $lignes[] = '        <p class="coordonnees__adresse">' . e($infos['adresse']) . '</p>';
+    if ($adresse !== '') {
+        $lignes[] = '        <p class="coordonnees__adresse">' . e($adresse) . '</p>';
     }
 
-    if (($infos['acces'] ?? '') !== '') {
-        $lignes[] = '        <p class="coordonnees__acces">' . e($infos['acces']) . '</p>';
+    if ($acces !== '') {
+        $lignes[] = '        <p class="coordonnees__acces">' . e($acces) . '</p>';
     }
 
-    if ($lignes === [] && ($infos['telephone'] ?? '') === '') {
+    if ($lignes === [] && $telephone === '') {
         return '';
     }
 
@@ -243,10 +264,10 @@ function rendre_coordonnees(array $infos): string
     array_push($bloc, ...$lignes);
     $bloc[] = '      </address>';
 
-    if (($infos['telephone'] ?? '') !== '') {
+    if ($telephone !== '') {
         $bloc[] = '      <p class="coordonnees__appel">'
-            . '<a class="bouton" href="tel:' . e(lien_telephone($infos['telephone'])) . '">'
-            . 'Appeler le ' . e($infos['telephone']) . '</a></p>';
+            . '<a class="bouton" href="tel:' . e(lien_telephone($telephone)) . '">'
+            . 'Appeler le ' . e($telephone) . '</a></p>';
     }
 
     $bloc[] = '    </section>';
@@ -322,7 +343,7 @@ function rendre_pied(array $infos): string
     $jours = [];
 
     foreach (JOURS_SEMAINE as $cle => $libelle) {
-        $horaire = $infos['horaires_' . $cle] ?? '';
+        $horaire = info($infos, 'horaires_' . $cle);
 
         if ($horaire === '') {
             continue;
@@ -347,9 +368,11 @@ function rendre_pied(array $infos): string
         $lignes[] = '    </section>';
     }
 
-    if (($infos['telephone'] ?? '') !== '') {
+    $telephone = info($infos, 'telephone');
+
+    if ($telephone !== '') {
         $lignes[] = '    <p class="pied__telephone"><a href="tel:'
-            . e(lien_telephone($infos['telephone'])) . '">' . e($infos['telephone']) . '</a></p>';
+            . e(lien_telephone($telephone)) . '">' . e($telephone) . '</a></p>';
     }
 
     $lignes[] = '    <script src="jour.js" defer></script>';

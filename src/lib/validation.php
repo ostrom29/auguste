@@ -26,7 +26,7 @@ const CARTE_ENTETES_FACULTATIFS = ['vedette'];
  * pas la publication : la section correspondante est simplement omise.
  */
 const INFOS_CLES_ATTENDUES = [
-    'nom', 'adresse', 'acces', 'telephone',
+    'nom', 'accroche', 'adresse', 'acces', 'telephone',
     'horaires_lundi', 'horaires_mardi', 'horaires_mercredi', 'horaires_jeudi',
     'horaires_vendredi', 'horaires_samedi', 'horaires_dimanche',
 ];

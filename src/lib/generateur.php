@@ -93,7 +93,10 @@ function generer(string $source, string $racine): array
             ],
             $carte['categories']
         );
-        $resultat['avertissements'] = avertissements_infos($infos);
+        $resultat['avertissements'] = array_merge(
+            avertissements_infos($infos),
+            avertissements_vedettes($carte)
+        );
         $resultat['succes'] = true;
     } catch (RuntimeException $e) {
         $resultat['erreurs'] = [erreur_generale($e->getMessage())];
@@ -139,6 +142,30 @@ function ecrire(string $chemin, string $html): int
     }
 
     return $octets;
+}
+
+/**
+ * Trop de plats cochés « vedette » : on plafonne, mais sans le taire. Une
+ * coupe silencieuse laisserait le restaurateur cocher dans le vide.
+ *
+ * @param array<string, mixed> $carte
+ * @return list<string>
+ */
+function avertissements_vedettes(array $carte): array
+{
+    $affichees = count($carte['vedettes']);
+
+    if ($carte['cochees'] <= $affichees) {
+        return [];
+    }
+
+    return [sprintf(
+        '%d plats sont cochés « vedette » dans l\'onglet carte, mais l\'accueil '
+        . 'n\'en affiche que %d — au-delà, ce n\'est plus une sélection. '
+        . 'Décochez-en pour choisir lesquels.',
+        $carte['cochees'],
+        $affichees
+    )];
 }
 
 /**

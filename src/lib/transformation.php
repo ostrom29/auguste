@@ -65,13 +65,44 @@ function transformer_carte(array $lignes): array
         $categories[] = ['nom' => (string) $nom, 'plats' => $plats];
     }
 
+    $cochees = plats_coches($categories);
+
     return [
         'categories' => $categories,
-        'vedettes' => choisir_vedettes($categories),
+        'vedettes' => choisir_vedettes($categories, $cochees),
+        'cochees' => count($cochees),
         'lues' => count($lignes),
         'actives' => $actives,
         'ignorees' => count($lignes) - $actives,
     ];
+}
+
+/**
+ * Au-delà, la section « quelques incontournables » n'est plus une sélection
+ * mais un second menu, et l'accueil enterre les informations pratiques.
+ */
+const VEDETTES_MAXIMUM = 6;
+
+/**
+ * Les plats cochés « vedette » dans le Sheet.
+ *
+ * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
+ * @return list<array<string, mixed>>
+ */
+function plats_coches(array $categories): array
+{
+    $coches = [];
+
+    foreach ($categories as $categorie) {
+        foreach ($categorie['plats'] as $plat) {
+            if ($plat['vedette']) {
+                $plat['categorie'] = $categorie['nom'];
+                $coches[] = $plat;
+            }
+        }
+    }
+
+    return $coches;
 }
 
 /**
@@ -82,28 +113,28 @@ function transformer_carte(array $lignes): array
  * restaurateur reprend la main dès qu'il coche une case.
  *
  * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
+ * @param list<array<string, mixed>> $cochees
  * @return list<array<string, mixed>>
  */
-function choisir_vedettes(array $categories): array
+function choisir_vedettes(array $categories, array $cochees): array
 {
-    $choisies = [];
+    if ($cochees !== []) {
+        return array_slice($cochees, 0, VEDETTES_MAXIMUM);
+    }
+
     $premiers = [];
 
     foreach ($categories as $categorie) {
-        foreach ($categorie['plats'] as $rang => $plat) {
-            $plat['categorie'] = $categorie['nom'];
-
-            if ($plat['vedette']) {
-                $choisies[] = $plat;
-            }
-
-            if ($rang === 0) {
-                $premiers[] = $plat;
-            }
+        if ($categorie['plats'] === []) {
+            continue;
         }
+
+        $plat = $categorie['plats'][0];
+        $plat['categorie'] = $categorie['nom'];
+        $premiers[] = $plat;
     }
 
-    return $choisies !== [] ? $choisies : $premiers;
+    return array_slice($premiers, 0, VEDETTES_MAXIMUM);
 }
 
 /**
