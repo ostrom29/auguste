@@ -9,6 +9,8 @@ declare(strict_types=1);
  * échappé au moment de l'écriture.
  */
 
+require_once __DIR__ . '/texte.php';
+
 /** Jours de la semaine, dans l'ordre d'affichage du pied de page. */
 const JOURS_SEMAINE = [
     'lundi' => 'Lundi',
@@ -202,16 +204,3 @@ function lien_telephone(string $telephone): string
     return $chiffres;
 }
 
-/**
- * Échappe & < > et le guillemet double.
- *
- * L'apostrophe est laissée telle quelle : elle n'a rien de dangereux dans du
- * texte ni dans un attribut entre guillemets doubles — et le gabarit n'en
- * utilise pas d'autres — alors qu'un « d&#039;Isigny » rendrait le HTML
- * généré illisible à la relecture, dans une carte française pleine
- * d'apostrophes.
- */
-function e(string $texte): string
-{
-    return htmlspecialchars($texte, ENT_COMPAT | ENT_SUBSTITUTE, 'UTF-8');
-}

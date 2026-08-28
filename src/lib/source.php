@@ -16,14 +16,15 @@ declare(strict_types=1);
 /**
  * Charge les deux CSV bruts.
  *
+ * @param array<string, string> $config
  * @return array{carte: string, infos: string, description: string}
  */
-function source_charger(string $source, string $racine): array
+function source_charger(string $source, string $racine, array $config): array
 {
     $source = rtrim($source, '/\\');
 
     if ($source === '' || $source === 'sheet' || $source === 'remote') {
-        return source_depuis_sheet($racine);
+        return source_depuis_sheet($racine, $config);
     }
 
     if ($source === 'cache') {
@@ -46,14 +47,15 @@ function source_charger(string $source, string $racine): array
 }
 
 /**
+ * @param array<string, string> $config
  * @return array{carte: string, infos: string, description: string}
  */
-function source_depuis_sheet(string $racine): array
+function source_depuis_sheet(string $racine, array $config): array
 {
-    $config = source_config($racine);
+    $pourquoi = 'pour télécharger le Sheet ; sans elle, seuls --source=cache et --source=fixtures sont possibles';
 
-    $carte = source_telecharger($config['csv_carte'], 'carte');
-    $infos = source_telecharger($config['csv_infos'], 'infos');
+    $carte = source_telecharger(config_exiger($config, 'csv_carte', $pourquoi), 'carte');
+    $infos = source_telecharger(config_exiger($config, 'csv_infos', $pourquoi), 'infos');
 
     // On n'écrit le cache qu'une fois les deux onglets récupérés, pour ne
     // jamais laisser un cache à moitié à jour.
@@ -94,39 +96,6 @@ function source_lire_fichier(string $chemin): string
     }
 
     return $contenu;
-}
-
-/**
- * @return array{csv_carte: string, csv_infos: string}
- */
-function source_config(string $racine): array
-{
-    $chemin = $racine . '/config.php';
-
-    if (!is_file($chemin)) {
-        throw new RuntimeException(
-            "config.php est introuvable.\n"
-            . "  Copiez le modèle : cp config.example.php config.php\n"
-            . '  Ou travaillez hors ligne : php src/build.php --source=fixtures'
-        );
-    }
-
-    $config = require $chemin;
-
-    if (!is_array($config)) {
-        throw new RuntimeException('config.php doit retourner un tableau.');
-    }
-
-    foreach (['csv_carte', 'csv_infos'] as $cle) {
-        if (!isset($config[$cle]) || !is_string($config[$cle]) || trim($config[$cle]) === '') {
-            throw new RuntimeException(sprintf('config.php : la clé « %s » est absente ou vide.', $cle));
-        }
-    }
-
-    return [
-        'csv_carte' => $config['csv_carte'],
-        'csv_infos' => $config['csv_infos'],
-    ];
 }
 
 function source_telecharger(string $url, string $onglet): string
@@ -212,7 +181,7 @@ function source_ecrire_cache(string $racine, string $carte, string $infos): void
 {
     $dossier = $racine . '/cache';
 
-    if (!is_dir($dossier) && !mkdir($dossier, 0o775, true) && !is_dir($dossier)) {
+    if (!is_dir($dossier) && !mkdir($dossier, 0775, true) && !is_dir($dossier)) {
         throw new RuntimeException(sprintf('Création du dossier de cache impossible : %s', $dossier));
     }
 
