@@ -122,7 +122,43 @@ function source_telecharger(string $url, string $onglet): string
     return $contenu;
 }
 
+/** Une panne réseau passagère ne doit pas renvoyer le restaurateur vers un développeur. */
+const TENTATIVES = 3;
+
 function source_telecharger_curl(string $url, string $onglet): string
+{
+    $erreur = '';
+
+    for ($essai = 1; $essai <= TENTATIVES; ++$essai) {
+        [$contenu, $erreur, $code] = source_essai_curl($url);
+
+        if ($contenu !== false && $code === 200) {
+            return (string) $contenu;
+        }
+
+        // Une réponse HTTP, même mauvaise, est un verdict : le classeur n'est
+        // plus publié, l'URL est fausse. Réessayer n'y changerait rien.
+        if ($contenu !== false) {
+            throw new RuntimeException(sprintf('L\'onglet « %s » a répondu HTTP %d.', $onglet, $code));
+        }
+
+        if ($essai < TENTATIVES) {
+            sleep($essai);
+        }
+    }
+
+    throw new RuntimeException(sprintf(
+        'Téléchargement de l\'onglet « %s » impossible après %d tentatives : %s',
+        $onglet,
+        TENTATIVES,
+        $erreur
+    ));
+}
+
+/**
+ * @return array{0: string|false, 1: string, 2: int}
+ */
+function source_essai_curl(string $url): array
 {
     $curl = curl_init($url);
     if ($curl === false) {
@@ -133,8 +169,13 @@ function source_telecharger_curl(string $url, string $onglet): string
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_MAXREDIRS => 5,
-        CURLOPT_CONNECTTIMEOUT => 10,
-        CURLOPT_TIMEOUT => 30,
+        // Large : sur mutualisé, la première résolution DNS d'un processus web
+        // froid peut demander plusieurs secondes.
+        CURLOPT_CONNECTTIMEOUT => 25,
+        CURLOPT_TIMEOUT => 60,
+        // L'hébergement résout docs.google.com en IPv6 d'abord alors que sa
+        // route IPv6 sortante n'est pas fiable : on force IPv4.
+        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
         CURLOPT_USERAGENT => 'chez-auguste-build/1.0',
     ]);
 
@@ -143,17 +184,14 @@ function source_telecharger_curl(string $url, string $onglet): string
     $code = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
     curl_close($curl);
 
-    if ($contenu === false) {
-        throw new RuntimeException(sprintf('Téléchargement de l\'onglet « %s » impossible : %s', $onglet, $erreur));
-    }
-
-    if ($code !== 200) {
-        throw new RuntimeException(sprintf('L\'onglet « %s » a répondu HTTP %d.', $onglet, $code));
-    }
-
-    return (string) $contenu;
+    return [$contenu, $erreur, $code];
 }
 
+/**
+ * Repli si cURL manque. Inutilisable sur l'hébergement cible, où
+ * allow_url_fopen est désactivé — gardé pour ne pas dépendre d'un seul
+ * chemin sur une machine de développement.
+ */
 function source_telecharger_flux(string $url, string $onglet): string
 {
     $contexte = stream_context_create([

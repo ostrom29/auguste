@@ -29,6 +29,11 @@ RACINE = Path(__file__).resolve().parent.parent
 DIST = RACINE / "dist"
 
 
+# verif.sh a besoin des fixtures et de l'arborescence du dépôt : sur le serveur
+# il ne saurait qu'échouer. C'est un outil de développement, il reste ici.
+EXCLUS = {"verif.sh"}
+
+
 def ajouter(archive: zipfile.ZipFile, source: Path, destination: str) -> None:
     """Ajoute un fichier ou tout un dossier, en conservant l'arborescence."""
     if source.is_file():
@@ -36,7 +41,7 @@ def ajouter(archive: zipfile.ZipFile, source: Path, destination: str) -> None:
         return
 
     for chemin in sorted(source.rglob("*")):
-        if chemin.is_file():
+        if chemin.is_file() and chemin.name not in EXCLUS:
             archive.write(chemin, f"{destination}/{chemin.relative_to(source)}")
 
 

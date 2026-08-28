@@ -3,6 +3,28 @@
 Cible : Scaleway Web Hosting, panel cPanel, PHP 8, dépôt par Gestionnaire de
 fichiers ou SFTP. Pas de build step, pas de Composer, rien à compiler.
 
+## Environnement constaté
+
+Relevé sur le serveur le 28 août 2026, à vérifier s'il change d'offre.
+
+| | |
+| --- | --- |
+| Hôte | `pf-014.whm.fr-par.scw.cloud`, compte `cpe0005013` |
+| Racine | `/home/cpe0005013`, site dans `public_html` |
+| SSH | **ouvert et fonctionnel**, OpenSSH 8.0, shell complet, non cloisonné |
+| FTP | Pure-FTPd avec TLS sur le port 21 ; FTPS implicite (990) fermé |
+| PHP web | 8.2.33, SAPI **LiteSpeed** — `curl`, `mbstring` et `json` présents |
+| `allow_url_fopen` | **désactivé** côté web : seul `curl` permet de joindre le Sheet |
+| DNS | résout `docs.google.com` en IPv6 d'abord, route IPv6 peu fiable |
+
+Deux conséquences déjà prises en compte dans le code : le téléchargement force
+**IPv4**, et il réessaie trois fois. La première résolution DNS d'un processus
+web froid a été mesurée à **11,7 s**, contre 1,9 s à chaud — un timeout court
+échouerait un clic sur deux.
+
+Le `Claude.md` du projet suppose qu'il n'y a « pas d'accès SSH garanti ». Sur
+cette offre, il y en a un.
+
 ## L'arborescence n'est pas celle du dépôt
 
 Seul `public_html` est servi par Apache. Le générateur et `config.php` — qui
