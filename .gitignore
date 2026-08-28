@@ -7,3 +7,6 @@
 
 # HTML généré : jamais commité
 /public/carte.html
+
+# Archives de déploiement, reconstruites par outils/paquet.py
+/dist/

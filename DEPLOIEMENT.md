@@ -24,15 +24,23 @@ en local) puis `../auguste/src` (l'hébergement). Rien à modifier entre les deu
 
 ## Première installation
 
-**1. Déposer les fichiers.** Dans le Gestionnaire de fichiers cPanel, vérifiez
-la barre de chemin avant chaque envoi — c'est là qu'on se trompe.
+**1. Déposer les fichiers.** Le Gestionnaire de fichiers cPanel n'envoie que
+des fichiers, jamais des dossiers. On envoie donc une archive et on l'extrait
+sur place :
 
-| Depuis le dépôt | Vers |
-| --- | --- |
-| `public/style.css`, `public/publier.php` | `~/public_html/` |
-| `src/` en entier | `~/auguste/src/` |
+    python3 outils/paquet.py
 
-Créez aussi `~/auguste/cache/`, vide.
+Ça produit deux archives dans `dist/`, une par destination :
+
+| Archive | Extraire dans | Donne |
+| --- | --- | --- |
+| `1-auguste.zip` | `~/` | `~/auguste/src/`, `config.example.php`, `cache/` |
+| `2-public_html.zip` | `~/public_html/` | `publier.php`, `style.css` |
+
+Pour chacune : ouvrez le dossier de destination dans le Gestionnaire, vérifiez
+la barre de chemin — c'est là qu'on se trompe —, **Téléverser** l'archive,
+puis clic droit dessus et **Extraire**. Supprimez l'archive ensuite ; celle
+qui atterrit dans `public_html` serait sinon téléchargeable.
 
 **2. Générer un secret**, sur votre machine :
 
@@ -76,7 +84,12 @@ Le restaurateur ne déploie jamais rien : il clique « Publier » dans son Sheet
 et le serveur régénère `carte.html` tout seul.
 
 Vous ne redéposez des fichiers que lorsque **le code ou la CSS** changent.
-Lancez `./src/verif.sh` avant, puis renvoyez seulement ce qui a bougé.
+Lancez `./src/verif.sh` avant, refaites les archives avec
+`python3 outils/paquet.py`, et ne renvoyez que celle qui a bougé.
+
+Pour un seul fichier modifié, l'éditeur du Gestionnaire de fichiers va plus
+vite qu'une archive. Le jour où les allers-retours deviennent pénibles,
+passez à WinSCP : il envoie un dossier entier d'un coup, récursivement.
 
 Ne déposez jamais `carte.html` à la main : il est écrit par le serveur, et
 votre copie locale serait écrasée au prochain clic de toute façon.
