@@ -164,10 +164,10 @@ function rendre_pied(array $infos): string
             continue;
         }
 
-        $jours[] = '        <div class="horaires__jour">';
-        $jours[] = '          <dt class="horaires__nom">' . e($libelle) . '</dt>';
-        $jours[] = '          <dd class="horaires__valeur">' . e($horaire) . '</dd>';
-        $jours[] = '        </div>';
+        $jours[] = '      <div class="horaires__jour">';
+        $jours[] = '        <dt class="horaires__nom">' . e($libelle) . '</dt>';
+        $jours[] = '        <dd class="horaires__valeur">' . e($horaire) . '</dd>';
+        $jours[] = '      </div>';
     }
 
     if ($jours === []) {
@@ -202,7 +202,16 @@ function lien_telephone(string $telephone): string
     return $chiffres;
 }
 
+/**
+ * Échappe & < > et le guillemet double.
+ *
+ * L'apostrophe est laissée telle quelle : elle n'a rien de dangereux dans du
+ * texte ni dans un attribut entre guillemets doubles — et le gabarit n'en
+ * utilise pas d'autres — alors qu'un « d&#039;Isigny » rendrait le HTML
+ * généré illisible à la relecture, dans une carte française pleine
+ * d'apostrophes.
+ */
 function e(string $texte): string
 {
-    return htmlspecialchars($texte, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return htmlspecialchars($texte, ENT_COMPAT | ENT_SUBSTITUTE, 'UTF-8');
 }

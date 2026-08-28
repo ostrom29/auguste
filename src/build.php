@@ -152,12 +152,20 @@ function formater_erreurs(array $erreurs): array
 
     $lignes[] = '';
     $lignes[] = sprintf(
-        '%d erreur%s. Rien n\'a été écrit, la version précédente du site reste en place.',
+        '%d %s. Rien n\'a été écrit, la version précédente du site reste en place.',
         count($erreurs),
-        count($erreurs) > 1 ? 's' : ''
+        accord(count($erreurs), 'erreur')
     );
 
     return $lignes;
+}
+
+/**
+ * Accord en nombre à la française : 0 et 1 restent au singulier.
+ */
+function accord(int $nombre, string $mot): string
+{
+    return $nombre > 1 ? $mot . 's' : $mot;
 }
 
 /**
@@ -188,10 +196,13 @@ function resumer(string $source, array $carte, int $octets, array $avertissement
 
     printf("Source     : %s\n", $source);
     printf(
-        "Lignes     : %d lues, %d actives, %d ignorées (actif ≠ oui)\n",
+        "Lignes     : %d %s, %d %s, %d %s (actif ≠ oui)\n",
         $carte['lues'],
+        accord($carte['lues'], 'lue'),
         $carte['actives'],
-        $carte['ignorees']
+        accord($carte['actives'], 'active'),
+        $carte['ignorees'],
+        accord($carte['ignorees'], 'ignorée')
     );
     printf("Catégories : %s\n", implode(' · ', $detail));
     printf("Écrit      : public/carte.html (%s octets)\n", number_format($octets, 0, ',', ' '));
