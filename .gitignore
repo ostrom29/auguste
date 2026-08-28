@@ -1,0 +1,9 @@
+# Configuration locale (URLs du Sheet) — voir config.example.php
+/config.php
+
+# CSV téléchargés
+/cache/*
+!/cache/.gitkeep
+
+# HTML généré : jamais commité
+/public/carte.html
