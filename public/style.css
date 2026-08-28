@@ -1,0 +1,82 @@
+/*
+ * Chez Auguste — feuille de style minimale.
+ *
+ * Strict minimum pour que la carte soit lisible sur mobile, en attendant la
+ * validation du style : aucune couleur, aucune police, aucune décision
+ * esthétique. Tout est ici du réglage de lisibilité ou de mise en page.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  padding: 1rem;
+  max-width: 38rem;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* ---- En-tête ---- */
+
+.entete__coordonnees {
+  font-style: normal; /* <address> est en italique par défaut. */
+}
+
+.entete__adresse,
+.entete__acces,
+.entete__telephone,
+.entete__message {
+  margin: 0.25rem 0;
+}
+
+/* ---- Carte ---- */
+
+.categorie__plats {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plat + .plat {
+  margin-top: 1rem;
+}
+
+/* Le prix est aligné à droite, sur la ligne du nom. */
+.plat__entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.plat__nom,
+.plat__prix,
+.plat__description,
+.plat__allergenes {
+  margin: 0;
+}
+
+.plat__prix {
+  white-space: nowrap; /* « 12,90 € » ne doit jamais être coupé. */
+}
+
+/* ---- Horaires ---- */
+
+.horaires {
+  margin: 0;
+}
+
+.horaires__jour {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.horaires__valeur {
+  margin: 0;
+  text-align: right;
+}
