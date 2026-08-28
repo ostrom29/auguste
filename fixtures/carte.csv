@@ -1,0 +1,23 @@
+categorie,nom,description,prix,allergenes,ordre,actif
+Entrées,Œuf mayonnaise,"Œuf fermier, mayonnaise maison",2.50,"œuf, moutarde",10,oui
+Entrées,Poireaux vinaigrette,Vinaigrette à l'échalote,3.20,"moutarde, sulfites",20,oui
+Entrées,Terrine de campagne,"Cornichons, pain de campagne",4.50,"gluten, sulfites",30,oui
+Entrées,Salade de museau,"Sauce gribiche, persil plat",4.80,"œuf, moutarde",40,oui
+Entrées,Soupe à l'oignon gratinée,"Gratinée au comté, croûtons",5.90,"gluten, lait",50,non
+Plats,Bœuf bourguignon,"Mijoté au vin rouge, carottes fondantes et lardons, servi avec des pommes vapeur",12.90,sulfites,10,oui
+Plats,Blanquette de veau,Riz pilaf,13.50,"lait, gluten",20,oui
+Plats,Andouillette AAAAA,"Sauce moutarde, frites maison",13.90,"moutarde, sulfites",30,oui
+Plats,Steak frites,Sauce au poivre,14.50,lait,40,oui
+Plats,Saucisse purée,Purée maison au beurre,11.50,"lait, sulfites",50,oui
+Plats,Confit de canard,Pommes sarladaises,15.90,,60,oui
+Plats,Poulet rôti,Frites ou salade verte,12.50,,70,oui
+Plats,Gratin de macaronis,"Comté, crème, jambon blanc",10.90,"gluten, lait",80,oui
+Desserts,Œufs à la neige,"Crème anglaise, amandes grillées",4.50,"œuf, lait, fruits à coque",10,oui
+Desserts,Baba au rhum,Chantilly maison,5.20,"gluten, œuf, lait",20,oui
+Desserts,Mousse au chocolat,,4.20,"œuf, lait",30,oui
+Desserts,Tarte Tatin,"Servie tiède, crème fraîche d'Isigny",5.50,"gluten, lait",40,oui
+Desserts,Profiteroles,"Chocolat chaud, glace vanille",5.90,"gluten, œuf, lait",50,oui
+Boissons,Pichet de vin rouge 50cl,Côtes-du-Rhône,8.00,sulfites,10,oui
+Boissons,Demi pression,,3.50,gluten,20,oui
+Boissons,Café,,1.80,,30,oui
+Boissons,Eau minérale 75cl,,3.00,,40,oui

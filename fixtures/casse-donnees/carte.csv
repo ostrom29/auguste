@@ -1,0 +1,7 @@
+categorie,nom,description,prix,allergenes,ordre,actif
+Entrées,Œuf mayonnaise,"Œuf fermier, mayonnaise maison",2.50,"œuf, moutarde",10,oui
+Entrées,,Vinaigrette à l'échalote,3.20,moutarde,20,oui
+,Terrine de campagne,Cornichons et pain de campagne,4.50,gluten,30,oui
+Plats,Bœuf bourguignon,Mijoté au vin rouge,"12,90 €",sulfites,10,oui
+Plats,Blanquette de veau,Riz pilaf,13.50,lait,vingt,oui
+Desserts,Mousse au chocolat,,quatre euros vingt,"œuf, lait",dix,non

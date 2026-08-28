@@ -1,0 +1,6 @@
+actif,ordre,nom,prix,categorie,allergenes,description
+oui,20,Poireaux vinaigrette,3.20,Entrées,"moutarde, sulfites",Vinaigrette à l'échalote
+oui,10,Œuf mayonnaise,2.50,Entrées,"œuf, moutarde","Œuf fermier, mayonnaise maison"
+oui,10,Bœuf bourguignon,12.90,Plats,sulfites,Mijoté au vin rouge
+non,20,Andouillette AAAAA,13.90,Plats,moutarde,Sauce moutarde
+oui,10,Mousse au chocolat,4.20,Desserts,"œuf, lait",

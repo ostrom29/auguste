@@ -1,0 +1,5 @@
+categorie,nom,description,prix,allergenes,ordre,actif
+Entrées,Œuf mayonnaise,"Œuf fermier, mayonnaise maison",2.50,"œuf, moutarde",10,non
+Plats,Bœuf bourguignon,Mijoté au vin rouge,12.90,sulfites,10,non
+Desserts,Tarte Tatin,Servie tiède,5.50,"gluten, lait",10,non
+Boissons,Café,,1.80,,10,non

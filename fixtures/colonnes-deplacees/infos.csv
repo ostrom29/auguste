@@ -1,0 +1,13 @@
+valeur,cle
+Chez Auguste,nom
+"12 rue de Test, 75000 Paris",adresse
+"Dans la galerie couverte, en face du fleuriste",acces
+01 23 45 67 89,telephone
+"12h00-14h30, 19h00-22h30",horaires_lundi
+"12h00-14h30, 19h00-22h30",horaires_mardi
+"12h00-14h30, 19h00-22h30",horaires_mercredi
+"12h00-14h30, 19h00-23h00",horaires_jeudi
+"12h00-14h30, 19h00-23h00",horaires_vendredi
+"12h00-15h00, 19h00-23h00",horaires_samedi
+fermé,horaires_dimanche
+Colonnes inversées : le parseur mappe par nom.,message
