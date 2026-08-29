@@ -25,7 +25,12 @@ cd "$(dirname "$0")/.." || exit 1
 titre() { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
 
 titre "Vérifications locales"
-if ! ./src/verif.sh | tail -2; then
+# « bash src/... » plutôt que « ./src/... » : le bit d'exécution ne survit pas
+# toujours à un aller-retour par un partage Windows.
+if sortie=$(bash src/verif.sh); then
+  echo "$sortie" | tail -2
+else
+  echo "$sortie"
   echo "Vérifications en échec — rien n'a été envoyé." >&2
   exit 1
 fi
@@ -50,6 +55,16 @@ if $SSH "$HOTE" "grep -q 'BEGIN chez-auguste' $DISTANT/public_html/.htaccess 2>/
 else
   $SSH "$HOTE" "cp $DISTANT/public_html/.htaccess $DISTANT/public_html/.htaccess.avant 2>/dev/null; cat >> $DISTANT/public_html/.htaccess" < deploiement/htaccess.txt
   echo "  ajouté (sauvegarde : .htaccess.avant)"
+fi
+
+titre "Clé url_site"
+# Sans elle, le générateur n'émet ni canonique, ni Open Graph, ni JSON-LD, ni
+# sitemap — et il le dit, mais autant ne pas avoir à y penser.
+if $SSH "$HOTE" "grep -q \"'url_site'\" $DISTANT/auguste/config.php"; then
+  echo "  déjà présente"
+else
+  $SSH "$HOTE" "sed -i \"s|^];|    'url_site' => '$SITE',\n];|\" $DISTANT/auguste/config.php"
+  echo "  ajoutée : $SITE"
 fi
 
 titre "Génération sur le serveur"
