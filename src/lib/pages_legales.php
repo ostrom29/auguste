@@ -32,6 +32,29 @@ const LEGAL_CLES = [
 const A_COMPLETER = 'À COMPLÉTER';
 
 /**
+ * Valeurs qui signifient « cette mention ne s'applique pas ici ».
+ *
+ * Une entreprise individuelle n'a pas de capital social, et qui n'est pas
+ * assujetti à la TVA n'a pas de numéro intracommunautaire. Afficher
+ * « À COMPLÉTER » sur ces lignes serait faux : la ligne disparaît.
+ */
+const SANS_OBJET = ['-', '—', 'sans objet', 'non applicable', 'n/a'];
+
+/** absente | sans_objet | renseignee */
+function etat_mention(array $infos, string $cle): string
+{
+    $valeur = info($infos, $cle);
+
+    if ($valeur === '') {
+        return 'absente';
+    }
+
+    return in_array(mb_strtolower($valeur, 'UTF-8'), SANS_OBJET, true)
+        ? 'sans_objet'
+        : 'renseignee';
+}
+
+/**
  * @param array<string, string> $infos
  */
 function rendre_mentions_legales(array $infos, string $urlSite): string
@@ -45,6 +68,11 @@ function rendre_mentions_legales(array $infos, string $urlSite): string
     ];
 
     foreach (LEGAL_CLES as $cle => $libelle) {
+        // Une mention marquée sans objet ne figure pas du tout sur la page.
+        if (etat_mention($infos, $cle) === 'sans_objet') {
+            continue;
+        }
+
         $lignes[] = '      <div class="legal__ligne">';
         $lignes[] = '        <dt>' . e($libelle) . '</dt>';
         $lignes[] = '        <dd>' . mention($infos, $cle) . '</dd>';
@@ -195,7 +223,7 @@ function avertissements_legaux(array $infos): array
     $manquantes = [];
 
     foreach (array_merge(array_keys(LEGAL_CLES), ['hebergeur']) as $cle) {
-        if (info($infos, $cle) === '') {
+        if (etat_mention($infos, $cle) === 'absente') {
             $manquantes[] = $cle;
         }
     }
