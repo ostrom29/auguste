@@ -16,17 +16,30 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/rendu.php';
 
-/** Ces clés doivent être renseignées dans l'onglet infos avant mise en ligne. */
+/**
+ * Ce qu'il faut vraiment saisir : le reste se déduit.
+ *
+ * L'article 6-III de la LCEN impose davantage de mentions, mais le SIREN est
+ * contenu dans le SIRET, le numéro RCS est le SIREN, et la clé de TVA se
+ * calcule. Faire saisir à la main ce qu'une soustraction donne, c'est trois
+ * occasions de se tromper pour rien.
+ */
 const LEGAL_CLES = [
     'raison_sociale' => 'Raison sociale',
     'forme_juridique' => 'Forme juridique',
-    'capital' => 'Capital social',
+    'capital_social' => 'Capital social',
     'siret' => 'SIRET',
-    'rcs' => 'RCS',
-    'tva' => 'TVA intracommunautaire',
     'directeur_publication' => 'Directeur de la publication',
     'email' => 'Adresse électronique',
 ];
+
+/**
+ * L'hébergeur est connu : le domaine résout vers une adresse Scaleway. La clé
+ * « hebergeur » de l'onglet infos permet d'y substituer autre chose le jour
+ * où le site déménage.
+ */
+const HEBERGEUR_PAR_DEFAUT =
+    'Scaleway SAS, 8 rue de la Ville l’Évêque, 75008 Paris — 01 84 13 00 00';
 
 /** Marqueur affiché à la place d'une mention manquante. Il doit se voir. */
 const A_COMPLETER = 'À COMPLÉTER';
@@ -79,6 +92,16 @@ function rendre_mentions_legales(array $infos, string $urlSite): string
         $lignes[] = '      </div>';
     }
 
+    // Déduits du SIRET, jamais saisis.
+    $siren = siren_depuis_siret(info($infos, 'siret'));
+
+    foreach (mentions_deduites($infos, $siren) as $libelle => $valeur) {
+        $lignes[] = '      <div class="legal__ligne">';
+        $lignes[] = '        <dt>' . e($libelle) . '</dt>';
+        $lignes[] = '        <dd>' . e($valeur) . '</dd>';
+        $lignes[] = '      </div>';
+    }
+
     $lignes[] = '      <div class="legal__ligne">';
     $lignes[] = '        <dt>Adresse</dt>';
     $lignes[] = '        <dd>' . mention($infos, 'adresse') . '</dd>';
@@ -90,7 +113,8 @@ function rendre_mentions_legales(array $infos, string $urlSite): string
     $lignes[] = '    </dl>';
 
     $lignes[] = '    <h2>Hébergement</h2>';
-    $lignes[] = '    <p>Ce site est hébergé par ' . mention($infos, 'hebergeur') . '.</p>';
+    $lignes[] = '    <p>Ce site est hébergé par '
+        . e(info($infos, 'hebergeur', HEBERGEUR_PAR_DEFAUT)) . '.</p>';
 
     $lignes[] = '    <h2>Propriété intellectuelle</h2>';
     $lignes[] = '    <p>Les textes, la charte graphique et les photographies de ce site sont '
@@ -199,6 +223,62 @@ function page_simple(
 }
 
 /**
+ * Le SIREN : les neuf premiers chiffres du SIRET, une fois les espaces ôtés.
+ */
+function siren_depuis_siret(string $siret): string
+{
+    $chiffres = preg_replace('/\D/', '', $siret) ?? '';
+
+    return strlen($chiffres) >= 9 ? substr($chiffres, 0, 9) : '';
+}
+
+/**
+ * Le numéro de TVA intracommunautaire français : FR, une clé, puis le SIREN.
+ *
+ * La clé vaut (12 + 3 × (SIREN mod 97)) mod 97. Elle n'a rien de secret, elle
+ * n'a donc aucune raison d'être saisie à la main.
+ */
+function tva_intracommunautaire(string $siren): string
+{
+    if ($siren === '') {
+        return '';
+    }
+
+    $cle = (12 + 3 * ((int) $siren % 97)) % 97;
+
+    return sprintf('FR%02d%s', $cle, $siren);
+}
+
+/**
+ * Les mentions que le générateur calcule au lieu de les demander.
+ *
+ * @param array<string, string> $infos
+ * @return array<string, string>
+ */
+function mentions_deduites(array $infos, string $siren): array
+{
+    if ($siren === '') {
+        return [];
+    }
+
+    $deduites = [];
+
+    // Le numéro d'immatriculation est le SIREN ; la ville du greffe s'ajoute
+    // si on la connaît, mais elle n'est pas ce que la loi réclame.
+    $ville = info($infos, 'rcs_ville');
+    $deduites['RCS'] = trim('RCS ' . $ville . ' ' . $siren);
+
+    // Une entreprise non assujettie met « - » dans la clé tva : rien ne
+    // s'affiche alors, ce qui est plus juste qu'un numéro inventé.
+    if (etat_mention($infos, 'tva') !== 'sans_objet') {
+        $deduites['TVA intracommunautaire'] = info($infos, 'tva')
+            ?: tva_intracommunautaire($siren);
+    }
+
+    return $deduites;
+}
+
+/**
  * Une mention légale, ou un marqueur bien visible tant qu'elle manque.
  *
  * @param array<string, string> $infos
@@ -220,22 +300,37 @@ function mention(array $infos, string $cle): string
  */
 function avertissements_legaux(array $infos): array
 {
+    $avertissements = [];
     $manquantes = [];
 
-    foreach (array_merge(array_keys(LEGAL_CLES), ['hebergeur']) as $cle) {
+    // « hebergeur » n'y figure pas : il a un défaut correct, connu du code.
+    foreach (array_keys(LEGAL_CLES) as $cle) {
         if (etat_mention($infos, $cle) === 'absente') {
             $manquantes[] = $cle;
         }
     }
 
-    if ($manquantes === []) {
-        return [];
+    if ($manquantes !== []) {
+        $avertissements[] = sprintf(
+            'mentions légales incomplètes — %s à renseigner dans l\'onglet infos. '
+            . 'Les pages affichent « %s » en attendant, et ce n\'est pas conforme à la LCEN.',
+            implode(', ', $manquantes),
+            A_COMPLETER
+        );
     }
 
-    return [sprintf(
-        'mentions légales incomplètes — %s à renseigner dans l\'onglet infos. '
-        . 'Les pages affichent « %s » en attendant, et ce n\'est pas conforme à la LCEN.',
-        implode(', ', $manquantes),
-        A_COMPLETER
-    )];
+    // Un SIRET mal recopié rendrait faux le RCS et la TVA, qui en découlent.
+    $siret = info($infos, 'siret');
+    $chiffres = preg_replace('/\D/', '', $siret) ?? '';
+
+    if ($siret !== '' && strlen($chiffres) !== 14) {
+        $avertissements[] = sprintf(
+            'le SIRET « %s » compte %d chiffres au lieu de 14 — le RCS et la TVA '
+            . 'en sont déduits, ils seront faux.',
+            $siret,
+            strlen($chiffres)
+        );
+    }
+
+    return $avertissements;
 }
