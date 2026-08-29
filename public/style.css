@@ -411,6 +411,145 @@ section {
   text-align: center;
 }
 
+.pied__liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--filet);
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------- Pages de texte */
+
+.texte__titre {
+  margin-bottom: 2rem;
+  font-size: 1.7rem;
+  text-align: center;
+}
+
+.texte h2 {
+  margin: 2.2rem 0 0.6rem;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rouge);
+}
+
+.texte p {
+  margin: 0 0 0.9rem;
+}
+
+.chapo {
+  font-size: 1.1em;
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+.legal {
+  margin: 0;
+}
+
+.legal__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--filet);
+}
+
+.legal__ligne dt {
+  flex: 0 0 12rem;
+  color: var(--encre-douce);
+}
+
+.legal__ligne dd {
+  flex: 1 1 12rem;
+  margin: 0;
+}
+
+/* Une mention légale manquante doit se voir, pas se fondre dans la page. */
+.a-completer {
+  padding: 0.05em 0.4em;
+  background: var(--rouge);
+  color: var(--creme);
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+}
+
+/* ------------------------------------------------------- Formulaire */
+
+.formulaire {
+  margin-top: 1.8rem;
+}
+
+.formulaire__champ {
+  margin: 0 0 1.2rem;
+}
+
+.formulaire label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  color: var(--encre-douce);
+}
+
+.formulaire input,
+.formulaire textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--filet);
+  border-radius: 0;
+  background: #fff;
+  color: var(--encre);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.formulaire input:focus,
+.formulaire textarea:focus {
+  border-color: var(--rouge);
+}
+
+.formulaire textarea {
+  resize: vertical;
+}
+
+/* Pot de miel : hors de l'écran plutôt qu'en display:none, que certains
+   robots savent repérer. aria-hidden le retire aux lecteurs d'écran. */
+.formulaire__piege {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.formulaire__envoi {
+  margin: 1.6rem 0 0;
+}
+
+.formulaire__rgpd {
+  margin-top: 1.6rem;
+  font-size: 0.85rem;
+  color: var(--encre-douce);
+}
+
+.erreurs {
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border-left: 3px solid var(--rouge);
+  background: var(--creme-fonce);
+}
+
+.erreurs ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
 /* ------------------------------------------------------------ Grands écrans */
 
 @media (min-width: 46rem) {

@@ -90,9 +90,64 @@ compte  0 'Soupe'                                 "la ligne actif=non est absent
 compte  0 'plat__description"></p>'               "aucune description vide"
 compte  0 'plat__allergenes">Allergènes : </p>'   "aucun bloc allergènes vide"
 compte 17 'class="plat__description"'             "17 descriptions"
-compte 21 '&#160;€'                               "21 prix à espace insécable"
+# Sur la ligne du prix, pas n'importe où : la meta description cite elle aussi
+# des prix, et un motif trop large ferait dépendre ce test de sa formulation.
+compte 21 'plat__prix">.*&#160;€'                 "21 prix à espace insécable"
 compte  1 'lang="fr"'                             "la page est en français"
 compte  1 'name="viewport"'                       "meta viewport présent"
+
+echo
+echo "Pages annexes et métadonnées"
+
+fichier() {
+  if [ -f "public/$1" ]; then vert "$2"; else rouge "$2 — public/$1 absent"; fi
+}
+
+fichier index.html              "l accueil est généré"
+fichier mentions-legales.html   "les mentions légales sont générées"
+fichier confidentialite.html    "la politique de confidentialité est générée"
+fichier 404.html                "la page 404 est générée"
+fichier robots.txt              "robots.txt est généré"
+fichier gabarit.php             "le gabarit du formulaire est généré"
+
+dans() {
+  local f=$1 motif=$2 libelle=$3
+  if grep -q "$motif" "public/$f"; then vert "$libelle"; else rouge "$libelle"; fi
+}
+
+dans index.html 'name="description"'      "meta description sur l accueil"
+dans index.html 'rel="canonical"'         "balise canonique"
+dans index.html 'property="og:image"'     "image de partage déclarée"
+dans index.html 'application/ld+json'     "bloc JSON-LD présent"
+dans carte.html 'name="description"'      "meta description sur la carte"
+
+# Un JSON-LD mal formé est pire qu'absent : Google le rejette en silence.
+if python3 -c "
+import json, re, sys
+h = open('public/index.html', encoding='utf-8').read()
+m = re.search(r'<script type=\"application/ld\+json\">(.*?)</script>', h, re.S)
+sys.exit(0 if m and json.loads(m.group(1)).get('@type') == 'Restaurant' else 1)
+" 2>/dev/null; then
+  vert "le JSON-LD est un objet Restaurant valide"
+else
+  rouge "le JSON-LD est absent ou mal formé"
+fi
+
+echo
+echo "Formulaire de contact"
+
+# Le nom part dans le sujet du courriel : un saut de ligne y permettrait
+# d'injecter un « Bcc: ». Le message, lui, doit garder ses retours à la ligne.
+if php -r '
+require "public/contact.php";
+$nom = nettoyer("Pirate\nBcc: victime@example.com", true);
+$msg = nettoyer("ligne un\nligne deux", false);
+exit((strpos($nom, "\n") === false && strpos($msg, "\n") !== false) ? 0 : 1);
+' 2>/dev/null; then
+  vert "les sauts de ligne sont retirés du nom, gardés dans le message"
+else
+  rouge "nettoyage des champs : injection d en-tête possible"
+fi
 
 echo
 if [ "$echecs" -eq 0 ]; then

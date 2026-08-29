@@ -18,6 +18,8 @@ require_once __DIR__ . '/source.php';
 require_once __DIR__ . '/validation.php';
 require_once __DIR__ . '/transformation.php';
 require_once __DIR__ . '/rendu.php';
+require_once __DIR__ . '/pages_legales.php';
+require_once __DIR__ . '/annexes.php';
 
 /**
  * Régénère la page. Valide d'abord, écrit ensuite.
@@ -72,14 +74,28 @@ function generer(string $source, string $racine): array
         $carte = transformer_carte($carteCsv['lignes']);
         $infos = transformer_infos($infosCsv['lignes']);
 
-        // 3. Rendre les deux pages, puis les écrire.
+        // 3. Rendre, puis écrire.
+        $url = rtrim($config['url_site'], '/');
+
         $pages = [
-            'index.html' => rendre_accueil($carte['vedettes'], $infos),
-            'carte.html' => rendre_carte($carte['categories'], $infos),
+            'index.html' => rendre_accueil($carte['vedettes'], $infos, $carte['categories'], $url),
+            'carte.html' => rendre_carte($carte['categories'], $infos, $url),
+            'mentions-legales.html' => rendre_mentions_legales($infos, $url),
+            'confidentialite.html' => rendre_confidentialite($infos, $url),
+            // Le formulaire de contact est dynamique : il ne peut pas être
+            // pré-généré. Il reprend l'en-tête et le pied par ce gabarit, pour
+            // qu'il n'existe qu'une seule source de vérité pour le décor.
+            'gabarit.php' => rendre_gabarit($infos, $url),
+            '404.html' => rendre_404($infos),
+            'robots.txt' => rendre_robots($url),
         ];
 
-        foreach ($pages as $fichier => $html) {
-            $resultat['octets'] += ecrire($dossier . '/' . $fichier, $html);
+        if ($url !== '') {
+            $pages['sitemap.xml'] = rendre_sitemap($url);
+        }
+
+        foreach ($pages as $fichier => $contenu) {
+            $resultat['octets'] += ecrire($dossier . '/' . $fichier, $contenu);
             $resultat['pages'][] = $fichier;
         }
 
@@ -95,7 +111,10 @@ function generer(string $source, string $racine): array
         );
         $resultat['avertissements'] = array_merge(
             avertissements_infos($infos),
-            avertissements_vedettes($carte)
+            avertissements_vedettes($carte),
+            avertissements_legaux($infos),
+            $url === '' ? ['« url_site » n\'est pas configurée : ni balise canonique, '
+                . 'ni aperçu de partage, ni JSON-LD ne sont émis.'] : []
         );
         $resultat['succes'] = true;
     } catch (RuntimeException $e) {

@@ -12,7 +12,7 @@ declare(strict_types=1);
  *
  * @return array{
  *     csv_carte: string, csv_infos: string,
- *     sortie_dossier: string, secret_publication: string
+ *     sortie_dossier: string, secret_publication: string, url_site: string
  * }
  */
 function config_charger(string $racine): array
@@ -25,6 +25,10 @@ function config_charger(string $racine): array
         // dossier de l'application et le chemin est donné explicitement.
         'sortie_dossier' => $racine . '/public',
         'secret_publication' => '',
+        // Adresse publique du site, sans barre oblique finale. Les balises
+        // canoniques, Open Graph et le JSON-LD ont besoin d'URL absolues :
+        // elles sont lues par des machines qui ne savent pas d'où vient la page.
+        'url_site' => '',
     ];
 
     $chemin = $racine . '/config.php';

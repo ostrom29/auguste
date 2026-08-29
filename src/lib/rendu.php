@@ -10,6 +10,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/texte.php';
+require_once __DIR__ . '/metadonnees.php';
 
 /** Jours de la semaine, dans l'ordre d'affichage. */
 const JOURS_SEMAINE = [
@@ -55,13 +56,19 @@ const SALLE_HAUTEUR = 452;
  * @param list<array<string, mixed>> $vedettes
  * @param array<string, string> $infos
  */
-function rendre_accueil(array $vedettes, array $infos): string
+function rendre_accueil(array $vedettes, array $infos, array $categories, string $urlSite): string
 {
     $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
+    $titre = $nom . ' — ' . info($infos, 'accroche', ACCROCHE_PAR_DEFAUT);
+    $description = description_site($infos);
 
     return document(
         'accueil',
-        e($nom) . ' — ' . e(info($infos, 'accroche', ACCROCHE_PAR_DEFAUT)),
+        e($titre),
+        array_merge(
+            metadonnees($infos, 'index.html', $titre, $description, $urlSite),
+            [json_ld($infos, $categories, $urlSite)]
+        ),
         implode("\n", array_filter([
             rendre_entete($infos, 'accueil'),
             rendre_banniere($infos),
@@ -81,9 +88,17 @@ function rendre_accueil(array $vedettes, array $infos): string
  * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
  * @param array<string, string> $infos
  */
-function rendre_carte(array $categories, array $infos): string
+function rendre_carte(array $categories, array $infos, string $urlSite): string
 {
     $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
+    $titre = 'Carte — ' . $nom;
+    $description = sprintf(
+        'La carte de %s : %d plats, de %s à %s.',
+        $nom,
+        nombre_de_plats($categories),
+        prix_extreme($categories, 'min'),
+        prix_extreme($categories, 'max')
+    );
     $sections = [];
 
     foreach ($categories as $categorie) {
@@ -101,7 +116,8 @@ function rendre_carte(array $categories, array $infos): string
 
     return document(
         'carte',
-        'Carte — ' . e($nom),
+        e($titre),
+        metadonnees($infos, 'carte.html', $titre, $description, $urlSite),
         implode("\n", array_filter([
             rendre_entete($infos, 'carte'),
             '  <main id="contenu" class="carte">',
@@ -119,7 +135,10 @@ function rendre_carte(array $categories, array $infos): string
 // Blocs partagés
 // ---------------------------------------------------------------------------
 
-function document(string $classe, string $titre, string $corps): string
+/**
+ * @param list<string> $tete Balises supplémentaires du <head>, déjà échappées.
+ */
+function document(string $classe, string $titre, array $tete, string $corps): string
 {
     $html = implode("\n", [
         '<!DOCTYPE html>',
@@ -128,6 +147,7 @@ function document(string $classe, string $titre, string $corps): string
         '  <meta charset="utf-8">',
         '  <meta name="viewport" content="width=device-width, initial-scale=1">',
         '  <title>' . $titre . '</title>',
+        implode("\n", $tete),
         '  <link rel="stylesheet" href="style.css">',
         '  <link rel="icon" href="img/favicon.png" type="image/png">',
         '</head>',
@@ -167,12 +187,20 @@ function rendre_entete(array $infos, string $page): string
         ]);
     }
 
-    return implode("\n", [
+    $lignes = [
         '  <header class="entete entete--compacte">',
         '    <a class="entete__retour" href="index.html">' . $logo . '</a>',
-        '    <h1 class="entete__titre">La carte</h1>',
-        '  </header>',
-    ]);
+    ];
+
+    // Sur la carte, le titre appartient à l'en-tête. Sur une page de texte, il
+    // appartient au contenu : l'en-tête n'est alors qu'un retour à l'accueil.
+    if ($page === 'carte') {
+        $lignes[] = '    <h1 class="entete__titre">La carte</h1>';
+    }
+
+    $lignes[] = '  </header>';
+
+    return implode("\n", $lignes);
 }
 
 /**
@@ -375,10 +403,53 @@ function rendre_pied(array $infos): string
             . e(lien_telephone($telephone)) . '">' . e($telephone) . '</a></p>';
     }
 
+    $lignes[] = '    <nav class="pied__liens" aria-label="Liens de bas de page">';
+    $lignes[] = '      <a href="index.html">Accueil</a>';
+    $lignes[] = '      <a href="carte.html">La carte</a>';
+    $lignes[] = '      <a href="contact.php">Nous écrire</a>';
+    $lignes[] = '      <a href="mentions-legales.html">Mentions légales</a>';
+    $lignes[] = '      <a href="confidentialite.html">Confidentialité</a>';
+    $lignes[] = '    </nav>';
     $lignes[] = '    <script src="jour.js" defer></script>';
     $lignes[] = '  </footer>';
 
     return implode("\n", $lignes);
+}
+
+/**
+ * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
+ */
+function nombre_de_plats(array $categories): int
+{
+    return array_sum(array_map(
+        static fn (array $categorie): int => count($categorie['plats']),
+        $categories
+    ));
+}
+
+/**
+ * Le prix le plus bas ou le plus haut de la carte, déjà mis en forme.
+ *
+ * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
+ */
+function prix_extreme(array $categories, string $sens): string
+{
+    $retenu = null;
+
+    foreach ($categories as $categorie) {
+        foreach ($categorie['plats'] as $plat) {
+            $valeur = prix_numerique((string) $plat['prix']);
+
+            $meilleur = $retenu === null
+                || ($sens === 'min' ? $valeur < $retenu[0] : $valeur > $retenu[0]);
+
+            if ($meilleur) {
+                $retenu = [$valeur, (string) $plat['prix']];
+            }
+        }
+    }
+
+    return $retenu === null ? '' : $retenu[1];
 }
 
 /**

@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------------------
+# Chez Auguste — à ajouter à la fin de public_html/.htaccess
+#
+# Le début du fichier appartient à cPanel (« do not edit ») : on ajoute
+# APRÈS, sans rien retirer.
+#
+# Déposé par outils/deployer.sh, qui vérifie d'abord que le bloc n'y est pas
+# déjà. Repère du bloc : la ligne « BEGIN chez-auguste » ci-dessous.
+# ---------------------------------------------------------------------------
+
+# BEGIN chez-auguste
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Un seul site, une seule adresse. Sans ça, Google voit deux sites
+  # identiques et partage le crédit entre les deux.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # Tout passe en HTTPS. Le certificat existe, autant s'en servir.
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# Le texte se compresse à environ un tiers de sa taille. C'est la plus grosse
+# économie du site après les images.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE application/javascript text/javascript
+  AddOutputFilterByType DEFLATE application/json application/ld+json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Images et polices ne changent quasiment jamais : on les garde longtemps.
+  ExpiresByType image/jpeg    "access plus 6 months"
+  ExpiresByType image/png     "access plus 6 months"
+  ExpiresByType image/webp    "access plus 6 months"
+  ExpiresByType font/woff2    "access plus 1 year"
+
+  # La CSS n'a pas d'empreinte dans son nom : une heure, pour qu'une
+  # correction de style arrive vite chez les visiteurs.
+  ExpiresByType text/css        "access plus 1 hour"
+  ExpiresByType text/javascript "access plus 1 hour"
+
+  # Les pages sont régénérées quand le restaurateur clique sur « Publier » :
+  # elles doivent être revalidées à chaque visite, sinon un changement de
+  # carte mettrait des heures à se voir.
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=15552000"
+
+  # Le point de publication ne doit jamais être mis en cache ni indexé.
+  <Files "publier.php">
+    Header set Cache-Control "no-store"
+    Header set X-Robots-Tag "noindex, nofollow"
+  </Files>
+
+  # Le gabarit est un fichier de données produit par le build : il ne renvoie
+  # rien, mais il n'a aucune raison d'être atteignable.
+  <Files "gabarit.php">
+    Require all denied
+  </Files>
+</IfModule>
+
+# UTF-8 par défaut : le serveur ne l'annonce pas, seule la balise meta le dit.
+AddDefaultCharset UTF-8
+
+ErrorDocument 404 /404.html
+
+# END chez-auguste

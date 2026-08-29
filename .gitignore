@@ -5,9 +5,15 @@
 /cache/*
 !/cache/.gitkeep
 
-# HTML généré : jamais commité
-/public/carte.html
+# Pages et fichiers générés : jamais commités
 /public/index.html
+/public/carte.html
+/public/mentions-legales.html
+/public/confidentialite.html
+/public/404.html
+/public/gabarit.php
+/public/robots.txt
+/public/sitemap.xml
 
 # Originaux des images : lourds, et retraités par outils/images.py
 # vers public/img/, qui est versionné.
