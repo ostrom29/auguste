@@ -265,8 +265,10 @@ function mentions_deduites(array $infos, string $siren): array
 
     // Le numéro d'immatriculation est le SIREN ; la ville du greffe s'ajoute
     // si on la connaît, mais elle n'est pas ce que la loi réclame.
-    $ville = info($infos, 'rcs_ville');
-    $deduites['RCS'] = trim('RCS ' . $ville . ' ' . $siren);
+    $deduites['RCS'] = implode(' ', array_filter(
+        ['RCS', info($infos, 'rcs_ville'), $siren],
+        static fn (string $part): bool => $part !== ''
+    ));
 
     // Une entreprise non assujettie met « - » dans la clé tva : rien ne
     // s'affiche alors, ce qui est plus juste qu'un numéro inventé.
@@ -330,6 +332,24 @@ function avertissements_legaux(array $infos): array
             $siret,
             strlen($chiffres)
         );
+    }
+
+    // Une TVA saisie à la main qui contredit le SIRET : l'une des deux est
+    // fausse, et rien sur la page ne le laisserait voir.
+    $siren = siren_depuis_siret($siret);
+    $saisie = info($infos, 'tva');
+
+    if ($siren !== '' && etat_mention($infos, 'tva') === 'renseignee') {
+        $calculee = tva_intracommunautaire($siren);
+
+        if (strcasecmp(str_replace(' ', '', $saisie), $calculee) !== 0) {
+            $avertissements[] = sprintf(
+                'la TVA saisie « %s » ne correspond pas au SIRET : la formule donne %s. '
+                . 'Videz la cellule « tva » pour la laisser se calculer.',
+                $saisie,
+                $calculee
+            );
+        }
     }
 
     return $avertissements;
