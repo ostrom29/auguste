@@ -119,8 +119,11 @@ function rendre_404(array $infos): string
 function rendre_gabarit(array $infos, string $urlSite): string
 {
     $donnees = [
-        'entete' => rendre_entete($infos, 'interieure'),
+        // L'en-tête est rendu pour contact.php : c'est la seule page dynamique,
+        // et son entrée de menu doit s'afficher comme la page courante.
+        'entete' => rendre_entete($infos, 'interieure', 'contact.php'),
         'pied' => rendre_pied($infos),
+        'style' => ressource('style.css'),
         'nom' => info($infos, 'nom', NOM_PAR_DEFAUT),
         'email' => info($infos, 'email'),
         'telephone' => info($infos, 'telephone'),

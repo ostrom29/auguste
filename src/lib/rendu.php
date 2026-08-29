@@ -27,6 +27,59 @@ const NOM_PAR_DEFAUT = 'Chez Auguste';
 const ACCROCHE_PAR_DEFAUT = 'Bouillon-brasserie';
 
 /**
+ * Empreintes des ressources statiques, pour casser le cache des navigateurs.
+ *
+ * style.css et jour.js gardent le même nom d'une version à l'autre. Sans
+ * empreinte dans l'URL, un visiteur qui a déjà vu le site reçoit du HTML neuf
+ * avec l'ancienne feuille de style — ce qui donne une page à moitié cassée,
+ * pendant toute la durée du cache.
+ *
+ * Le registre est posé une fois par le générateur, avant tout rendu.
+ *
+ * @param array<string, string>|null $nouvelles
+ * @return array<string, string>
+ */
+function empreintes(?array $nouvelles = null): array
+{
+    static $registre = ['style.css' => '', 'jour.js' => ''];
+
+    if ($nouvelles !== null) {
+        $registre = $nouvelles;
+    }
+
+    return $registre;
+}
+
+/**
+ * L'URL d'une ressource, suffixée de son empreinte si on la connaît.
+ */
+function ressource(string $fichier, string $prefixe = ''): string
+{
+    $empreinte = empreintes()[$fichier] ?? '';
+
+    return $prefixe . $fichier . ($empreinte === '' ? '' : '?v=' . $empreinte);
+}
+
+/**
+ * Calcule les empreintes des ressources présentes dans le dossier de sortie.
+ *
+ * @return array<string, string>
+ */
+function calculer_empreintes(string $dossier): array
+{
+    $registre = [];
+
+    foreach (['style.css', 'jour.js'] as $fichier) {
+        $chemin = $dossier . '/' . $fichier;
+        // Huit caractères suffisent : on distingue des versions successives,
+        // on ne se défend contre personne.
+        $registre[$fichier] = is_file($chemin) ? substr(md5_file($chemin) ?: '', 0, 8) : '';
+    }
+
+    return $registre;
+}
+
+/**
  * Lit une info du Sheet, en repliant sur un défaut.
  *
  * Une clé présente mais vide vaut une clé absente : dans un tableur, effacer
@@ -70,7 +123,7 @@ function rendre_accueil(array $vedettes, array $infos, array $categories, string
             [json_ld($infos, $categories, $urlSite)]
         ),
         implode("\n", array_filter([
-            rendre_entete($infos, 'accueil'),
+            rendre_entete($infos, 'accueil', 'index.html'),
             rendre_banniere($infos),
             '  <main id="contenu">',
             rendre_message($infos),
@@ -119,7 +172,7 @@ function rendre_carte(array $categories, array $infos, string $urlSite): string
         e($titre),
         metadonnees($infos, 'carte.html', $titre, $description, $urlSite),
         implode("\n", array_filter([
-            rendre_entete($infos, 'carte'),
+            rendre_entete($infos, 'carte', 'carte.html'),
             '  <main id="contenu" class="carte">',
             rendre_message($infos),
             implode("\n", $sections),
@@ -148,7 +201,7 @@ function document(string $classe, string $titre, array $tete, string $corps): st
         '  <meta name="viewport" content="width=device-width, initial-scale=1">',
         '  <title>' . $titre . '</title>',
         implode("\n", $tete),
-        '  <link rel="stylesheet" href="style.css">',
+        '  <link rel="stylesheet" href="' . e(ressource('style.css')) . '">',
         '  <link rel="icon" href="img/favicon.png" type="image/png">',
         '</head>',
         '<body class="page page--' . $classe . '">',
@@ -164,10 +217,49 @@ function document(string $classe, string $titre, array $tete, string $corps): st
     return str_replace(ESPACE_INSECABLE, '&#160;', $html);
 }
 
+/** Le menu principal : trois entrées, assez courtes pour tenir sur une ligne. */
+const MENU = [
+    'index.html' => 'Accueil',
+    'carte.html' => 'La carte',
+    'contact.php' => 'Nous écrire',
+];
+
+/**
+ * La navigation principale.
+ *
+ * Trois entrées seulement : elles tiennent sur une ligne, même sur un petit
+ * téléphone, et se replient d'elles-mêmes si la place manque. Pas de bouton
+ * hamburger, donc pas de JavaScript, donc rien qui puisse ne pas s'ouvrir.
+ */
+function rendre_menu(string $courant): string
+{
+    $liens = [];
+
+    foreach (MENU as $fichier => $libelle) {
+        $actuel = $fichier === $courant;
+
+        // aria-current dit aux lecteurs d'écran où l'on se trouve ; la classe
+        // le dit aux voyants. Les deux, pas l'un ou l'autre.
+        $liens[] = sprintf(
+            '      <a class="menu__lien%s" href="%s"%s>%s</a>',
+            $actuel ? ' menu__lien--actuel' : '',
+            e($fichier),
+            $actuel ? ' aria-current="page"' : '',
+            e($libelle)
+        );
+    }
+
+    return implode("\n", array_merge(
+        ['    <nav class="menu" aria-label="Navigation principale">'],
+        $liens,
+        ['    </nav>']
+    ));
+}
+
 /**
  * @param array<string, string> $infos
  */
-function rendre_entete(array $infos, string $page): string
+function rendre_entete(array $infos, string $page, string $courant = ''): string
 {
     $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
     $accroche = info($infos, 'accroche', ACCROCHE_PAR_DEFAUT);
@@ -183,6 +275,7 @@ function rendre_entete(array $infos, string $page): string
             '  <header class="entete">',
             '    <h1 class="entete__titre">' . $logo . '</h1>',
             '    <p class="entete__accroche">' . e($accroche) . '</p>',
+            rendre_menu($courant),
             '  </header>',
         ]);
     }
@@ -190,10 +283,11 @@ function rendre_entete(array $infos, string $page): string
     $lignes = [
         '  <header class="entete entete--compacte">',
         '    <a class="entete__retour" href="index.html">' . $logo . '</a>',
+        rendre_menu($courant),
     ];
 
     // Sur la carte, le titre appartient à l'en-tête. Sur une page de texte, il
-    // appartient au contenu : l'en-tête n'est alors qu'un retour à l'accueil.
+    // appartient au contenu : l'en-tête n'est alors qu'un repère.
     if ($page === 'carte') {
         $lignes[] = '    <h1 class="entete__titre">La carte</h1>';
     }
@@ -403,14 +497,13 @@ function rendre_pied(array $infos): string
             . e(lien_telephone($telephone)) . '">' . e($telephone) . '</a></p>';
     }
 
-    $lignes[] = '    <nav class="pied__liens" aria-label="Liens de bas de page">';
-    $lignes[] = '      <a href="index.html">Accueil</a>';
-    $lignes[] = '      <a href="carte.html">La carte</a>';
-    $lignes[] = '      <a href="contact.php">Nous écrire</a>';
+    // Le menu principal couvre déjà les trois pages du site : le pied ne
+    // reprend que ce qui n'a pas sa place en haut.
+    $lignes[] = '    <nav class="pied__liens" aria-label="Informations légales">';
     $lignes[] = '      <a href="mentions-legales.html">Mentions légales</a>';
     $lignes[] = '      <a href="confidentialite.html">Confidentialité</a>';
     $lignes[] = '    </nav>';
-    $lignes[] = '    <script src="jour.js" defer></script>';
+    $lignes[] = '    <script src="' . e(ressource('jour.js')) . '" defer></script>';
     $lignes[] = '  </footer>';
 
     return implode("\n", $lignes);

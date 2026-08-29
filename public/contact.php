@@ -215,7 +215,7 @@ function page(array $gabarit, array $valeurs, array $erreurs, bool $envoye): str
       <title>{$titre}</title>
       <meta name="description" content="Écrire à {$gabarit['nom']}.">
       <meta name="robots" content="noindex">
-      <link rel="stylesheet" href="style.css">
+      <link rel="stylesheet" href="{$gabarit['style']}">
       <link rel="icon" href="img/favicon.png" type="image/png">
     </head>
     <body class="page page--contact">

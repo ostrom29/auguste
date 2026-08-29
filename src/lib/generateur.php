@@ -77,6 +77,9 @@ function generer(string $source, string $racine): array
         // 3. Rendre, puis écrire.
         $url = rtrim($config['url_site'], '/');
 
+        // Les empreintes se calculent avant tout rendu : les pages y référent.
+        empreintes(calculer_empreintes($dossier));
+
         $pages = [
             'index.html' => rendre_accueil($carte['vedettes'], $infos, $carte['categories'], $url),
             'carte.html' => rendre_carte($carte['categories'], $infos, $url),
