@@ -25,8 +25,10 @@ const CARTE_ENTETES_FACULTATIFS = ['vedette'];
  * Clés de l'onglet « infos » attendues par le gabarit. Leur absence n'empêche
  * pas la publication : la section correspondante est simplement omise.
  */
+// « accroche » n'y figure pas : vide est un choix légitime, le logo porte
+// déjà la mention. Elle n'apparaît que si on la saisit.
 const INFOS_CLES_ATTENDUES = [
-    'nom', 'accroche', 'adresse', 'acces', 'telephone',
+    'nom', 'adresse', 'acces', 'telephone',
     'horaires_lundi', 'horaires_mardi', 'horaires_mercredi', 'horaires_jeudi',
     'horaires_vendredi', 'horaires_samedi', 'horaires_dimanche',
 ];

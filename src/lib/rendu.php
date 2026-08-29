@@ -262,7 +262,12 @@ function rendre_menu(string $courant): string
 function rendre_entete(array $infos, string $page, string $courant = ''): string
 {
     $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
-    $accroche = info($infos, 'accroche', ACCROCHE_PAR_DEFAUT);
+
+    // Sans repli, volontairement : le logo dit déjà « BOUILLON - BRASSERIE ».
+    // L'accroche par défaut sert au titre de l'onglet et aux moteurs, qui ne
+    // savent pas lire une image — l'afficher ici la répéterait pour rien.
+    // Une accroche saisie dans le Sheet, elle, apparaît bien.
+    $accroche = info($infos, 'accroche');
 
     // Sur l'accueil le logo est le titre de la page ; sur la carte, il n'est
     // qu'un lien de retour, et le titre revient à la carte elle-même.
@@ -271,13 +276,13 @@ function rendre_entete(array $infos, string $page, string $courant = ''): string
         . ' sizes="(min-width: 40rem) 20rem, 60vw">';
 
     if ($page === 'accueil') {
-        return implode("\n", [
+        return implode("\n", array_filter([
             '  <header class="entete">',
             '    <h1 class="entete__titre">' . $logo . '</h1>',
-            '    <p class="entete__accroche">' . e($accroche) . '</p>',
+            $accroche === '' ? '' : '    <p class="entete__accroche">' . e($accroche) . '</p>',
             rendre_menu($courant),
             '  </header>',
-        ]);
+        ], static fn (string $ligne): bool => $ligne !== ''));
     }
 
     $lignes = [

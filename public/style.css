@@ -201,7 +201,8 @@ h3 {
   flex-wrap: wrap;
   gap: 0.2rem 1.6rem;
   justify-content: center;
-  margin-top: 1.6rem;
+  /* De l'air sous le logo, qui est recadré au plus près de son dessin. */
+  margin-top: 2.2rem;
   padding: 0.7rem 0;
   /* Deux filets, en écho aux traits qui encadrent le nom sur l'enseigne. */
   border-top: 1px solid var(--filet);
