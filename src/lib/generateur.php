@@ -94,7 +94,7 @@ function generer(string $source, string $racine): array
         ];
 
         if ($url !== '') {
-            $pages['sitemap.xml'] = rendre_sitemap($url);
+            $pages['sitemap.xml'] = rendre_sitemap($url, $infos);
         }
 
         foreach ($pages as $fichier => $contenu) {

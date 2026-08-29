@@ -152,9 +152,8 @@ function bloc_formulaire(array $valeurs, array $erreurs): string
     $antirobot = champs_antirobot();
 
     return bloc_erreurs($erreurs) . <<<HTML
-        <p>Une question, une remarque ? Écrivez-nous, ou appelez-nous : le numéro
-        est en bas de page. Pour une table, passez plutôt par la
-        <a href="reservation.php">demande de réservation</a>.</p>
+        <p>Une question, un groupe à placer, une remarque ? Écrivez-nous, ou
+        appelez-nous : le numéro est en bas de page.</p>
 
         <form class="formulaire" method="post" action="contact.php">
     {$antirobot}

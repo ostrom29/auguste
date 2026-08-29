@@ -110,22 +110,10 @@ function json_ld(array $infos, array $categories, string $urlSite): string
         'email' => info($infos, 'email') ?: null,
         'priceRange' => gamme_de_prix($categories),
         'openingHoursSpecification' => horaires_structures($infos),
-        'acceptsReservations' => 'True',
-        // Déclare l'adresse où réserver : c'est ce qui permet à Google de
-        // proposer l'action plutôt que de deviner.
-        'potentialAction' => [
-            '@type' => 'ReserveAction',
-            'target' => [
-                '@type' => 'EntryPoint',
-                'urlTemplate' => $urlSite . '/reservation.php',
-                'inLanguage' => 'fr',
-                'actionPlatform' => [
-                    'https://schema.org/DesktopWebPlatform',
-                    'https://schema.org/MobileWebPlatform',
-                ],
-            ],
-            'result' => ['@type' => 'FoodEstablishmentReservation', 'name' => 'Demande de réservation'],
-        ],
+        // Suit l'état réel du site : dire à Google qu'on réserve quand la page
+        // n'existe pas enverrait des clients sur une porte fermée.
+        'acceptsReservations' => reservation_active($infos) ? 'True' : 'False',
+        'potentialAction' => reservation_active($infos) ? action_reserver($urlSite) : null,
     ], static fn ($valeur): bool => $valeur !== null && $valeur !== [] && $valeur !== '');
 
     return implode("\n", [
@@ -134,6 +122,29 @@ function json_ld(array $infos, array $categories, string $urlSite): string
         (string) json_encode($donnees, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
         '  </script>',
     ]);
+}
+
+/**
+ * Déclare l'adresse où réserver : c'est ce qui permet à Google de proposer
+ * l'action plutôt que de la deviner.
+ *
+ * @return array<string, mixed>
+ */
+function action_reserver(string $urlSite): array
+{
+    return [
+        '@type' => 'ReserveAction',
+        'target' => [
+            '@type' => 'EntryPoint',
+            'urlTemplate' => $urlSite . '/reservation.php',
+            'inLanguage' => 'fr',
+            'actionPlatform' => [
+                'https://schema.org/DesktopWebPlatform',
+                'https://schema.org/MobileWebPlatform',
+            ],
+        ],
+        'result' => ['@type' => 'FoodEstablishmentReservation', 'name' => 'Demande de réservation'],
+    ];
 }
 
 /**

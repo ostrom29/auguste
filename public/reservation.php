@@ -44,6 +44,16 @@ if (PHP_SAPI !== 'cli') {
 function traiter_requete(): void
 {
     $gabarit = charger_gabarit();
+
+    // La prise de réservation est éteinte : la page se ferme, mais tout le
+    // code reste en place. Une ligne « reservation » à « oui » dans l'onglet
+    // infos la rallume, sans rien redéployer.
+    if (!($gabarit['reservation_active'] ?? false)) {
+        echo page_fermee($gabarit);
+
+        return;
+    }
+
     $valeurs = CHAMPS;
     $erreurs = [];
     $envoye = false;
@@ -71,6 +81,39 @@ function traiter_requete(): void
         'Réserver — ' . $gabarit['nom'],
         'Demander une table',
         $envoye ? bloc_confirmation($valeurs) : bloc_formulaire($valeurs, $erreurs, $gabarit)
+    );
+}
+
+/**
+ * Ce que voit un visiteur venu d'un ancien lien ou d'un moteur.
+ *
+ * Statut 404 : la page n'existe plus en tant que formulaire, et il vaut mieux
+ * que Google la retire de son index que de continuer à l'y proposer.
+ *
+ * @param array<string, mixed> $gabarit
+ */
+function page_fermee(array $gabarit): string
+{
+    http_response_code(404);
+
+    $appel = $gabarit['telephone_lien'] === ''
+        ? ''
+        : '    <p><a class="bouton" href="tel:' . h($gabarit['telephone_lien']) . '">Appeler le '
+            . h($gabarit['telephone']) . '</a></p>';
+
+    return page_formulaire(
+        $gabarit,
+        'reservation.php',
+        'Réservation — ' . $gabarit['nom'],
+        'Nous ne prenons pas de réservation',
+        implode("\n", array_filter([
+            '    <p>Les tables se prennent sur place, à l’arrivée. C’est le principe '
+                . 'de la maison, et cela n’a pas changé depuis longtemps.</p>',
+            '    <p>Pour un groupe ou une occasion particulière, appelez-nous ou '
+                . '<a href="contact.php">écrivez-nous</a> : nous verrons ce qu’il est '
+                . 'possible de faire.</p>',
+            $appel,
+        ]))
     );
 }
 

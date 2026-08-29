@@ -217,13 +217,42 @@ function document(string $classe, string $titre, array $tete, string $corps): st
     return str_replace(ESPACE_INSECABLE, '&#160;', $html);
 }
 
-/** Le menu principal : des libellés courts, qui se replient si besoin. */
-const MENU = [
-    'index.html' => 'Accueil',
-    'carte.html' => 'La carte',
-    'reservation.php' => 'Réserver',
-    'contact.php' => 'Nous écrire',
-];
+/**
+ * La prise de réservation est-elle ouverte ?
+ *
+ * Elle est éteinte par défaut : un formulaire de réservation que personne ne
+ * dépouille est pire que pas de formulaire du tout. Pour l'allumer, une ligne
+ * « reservation » à « oui » dans l'onglet infos — le code reste en place et
+ * complet en attendant.
+ *
+ * @param array<string, string> $infos
+ */
+function reservation_active(array $infos): bool
+{
+    return mb_strtolower(info($infos, 'reservation'), 'UTF-8') === 'oui';
+}
+
+/**
+ * Le menu principal : des libellés courts, qui se replient si besoin.
+ *
+ * @param array<string, string> $infos
+ * @return array<string, string>
+ */
+function menu(array $infos): array
+{
+    $entrees = [
+        'index.html' => 'Accueil',
+        'carte.html' => 'La carte',
+    ];
+
+    if (reservation_active($infos)) {
+        $entrees['reservation.php'] = 'Réserver';
+    }
+
+    $entrees['contact.php'] = 'Nous écrire';
+
+    return $entrees;
+}
 
 /**
  * La navigation principale.
@@ -232,11 +261,11 @@ const MENU = [
  * téléphone, et se replient d'elles-mêmes si la place manque. Pas de bouton
  * hamburger, donc pas de JavaScript, donc rien qui puisse ne pas s'ouvrir.
  */
-function rendre_menu(string $courant): string
+function rendre_menu(array $infos, string $courant): string
 {
     $liens = [];
 
-    foreach (MENU as $fichier => $libelle) {
+    foreach (menu($infos) as $fichier => $libelle) {
         $actuel = $fichier === $courant;
 
         // aria-current dit aux lecteurs d'écran où l'on se trouve ; la classe
@@ -281,7 +310,7 @@ function rendre_entete(array $infos, string $page, string $courant = ''): string
             '  <header class="entete">',
             '    <h1 class="entete__titre">' . $logo . '</h1>',
             $accroche === '' ? '' : '    <p class="entete__accroche">' . e($accroche) . '</p>',
-            rendre_menu($courant),
+            rendre_menu($infos, $courant),
             '  </header>',
         ], static fn (string $ligne): bool => $ligne !== ''));
     }
@@ -289,7 +318,7 @@ function rendre_entete(array $infos, string $page, string $courant = ''): string
     $lignes = [
         '  <header class="entete entete--compacte">',
         '    <a class="entete__retour" href="index.html">' . $logo . '</a>',
-        rendre_menu($courant),
+        rendre_menu($infos, $courant),
     ];
 
     // Sur la carte, le titre appartient à l'en-tête. Sur une page de texte, il
@@ -399,9 +428,13 @@ function rendre_coordonnees(array $infos): string
             . 'Appeler le ' . e($telephone) . '</a>';
     }
 
-    $actions[] = '<a class="bouton bouton--discret" href="reservation.php">Réserver une table</a>';
+    if (reservation_active($infos)) {
+        $actions[] = '<a class="bouton bouton--discret" href="reservation.php">Réserver une table</a>';
+    }
 
-    $bloc[] = '      <p class="coordonnees__appel">' . implode("\n        ", $actions) . '</p>';
+    if ($actions !== []) {
+        $bloc[] = '      <p class="coordonnees__appel">' . implode("\n        ", $actions) . '</p>';
+    }
 
     $bloc[] = '    </section>';
 

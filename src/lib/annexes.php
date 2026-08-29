@@ -9,15 +9,28 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/rendu.php';
 
-/** Les pages à proposer aux moteurs, avec leur importance relative. */
-const PAGES_INDEXEES = [
-    '' => '1.0',
-    'carte.html' => '0.9',
-    'reservation.php' => '0.7',
-    'contact.php' => '0.5',
-    'mentions-legales.html' => '0.2',
-    'confidentialite.html' => '0.2',
-];
+/**
+ * Les pages à proposer aux moteurs, avec leur importance relative.
+ *
+ * @param array<string, string> $infos
+ * @return array<string, string>
+ */
+function pages_indexees(array $infos): array
+{
+    $pages = ['' => '1.0', 'carte.html' => '0.9'];
+
+    // Une page absente du site n'a rien à faire dans le plan qu'on donne aux
+    // moteurs : ils la visiteraient pour recevoir un 404.
+    if (reservation_active($infos)) {
+        $pages['reservation.php'] = '0.7';
+    }
+
+    return $pages + [
+        'contact.php' => '0.5',
+        'mentions-legales.html' => '0.2',
+        'confidentialite.html' => '0.2',
+    ];
+}
 
 /** Une table se prend au moins une demi-heure avant la fermeture. */
 const DERNIERE_ARRIVEE = 30;
@@ -108,7 +121,10 @@ function rendre_robots(string $urlSite): string
     return implode("\n", $lignes);
 }
 
-function rendre_sitemap(string $urlSite): string
+/**
+ * @param array<string, string> $infos
+ */
+function rendre_sitemap(string $urlSite, array $infos): string
 {
     $jour = date('Y-m-d');
 
@@ -117,7 +133,7 @@ function rendre_sitemap(string $urlSite): string
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ];
 
-    foreach (PAGES_INDEXEES as $page => $priorite) {
+    foreach (pages_indexees($infos) as $page => $priorite) {
         $lignes[] = '  <url>';
         $lignes[] = '    <loc>' . e($urlSite . '/' . $page) . '</loc>';
         $lignes[] = '    <lastmod>' . $jour . '</lastmod>';
@@ -198,13 +214,15 @@ function rendre_gabarit(array $infos, string $urlSite): string
         $entetes[$page] = rendre_entete($infos, 'interieure', $page);
     }
 
+    $telephone = info($infos, 'telephone');
+
     $donnees = [
         'entetes' => $entetes,
         'pied' => rendre_pied($infos),
         'style' => ressource('style.css'),
         'nom' => info($infos, 'nom', NOM_PAR_DEFAUT),
         'email' => info($infos, 'email'),
-        'telephone' => info($infos, 'telephone'),
+        'telephone' => $telephone,
         'url_site' => $urlSite,
         // Les plages d'ouverture, jour par jour, déduites des horaires du
         // Sheet. La demande de réservation ne propose que des heures
@@ -212,6 +230,11 @@ function rendre_gabarit(array $infos, string $urlSite): string
         // de laisser le client attendre une réponse.
         'horaires' => $horaires,
         'heures' => heures_proposables($horaires),
+        // reservation.php se ferme lui-même quand la prise de réservation est
+        // éteinte : le fichier reste déployé, mais il ne sert plus de
+        // formulaire. Rien n'est supprimé, tout se rallume par le Sheet.
+        'reservation_active' => reservation_active($infos),
+        'telephone_lien' => $telephone === '' ? '' : lien_telephone($telephone),
     ];
 
     return implode("\n", [

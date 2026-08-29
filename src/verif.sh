@@ -133,20 +133,21 @@ else
   rouge "le JSON-LD est absent ou mal formé"
 fi
 
-dans index.html 'reservation.php'         "le menu mène à la réservation"
-
-# Une contradiction entre le JSON-LD et le site enverrait Google dire aux
-# clients qu'on ne réserve pas pendant que la page propose de réserver.
+# Le JSON-LD doit dire la même chose que le site, dans un sens comme dans
+# l'autre : annoncer une réservation qu'on ne prend pas enverrait des clients
+# sur une porte fermée, la taire quand on la prend perdrait des couverts.
 if python3 -c "
 import json, re, sys
 h = open('public/index.html', encoding='utf-8').read()
 d = json.loads(re.search(r'<script type=\"application/ld\+json\">(.*?)</script>', h, re.S).group(1))
-sys.exit(0 if d.get('acceptsReservations') == 'True'
-         and d.get('potentialAction', {}).get('@type') == 'ReserveAction' else 1)
+menu = 'reservation.php' in h
+declare = d.get('acceptsReservations') == 'True'
+action = d.get('potentialAction', {}).get('@type') == 'ReserveAction'
+sys.exit(0 if menu == declare and action == declare else 1)
 " 2>/dev/null; then
-  vert "le JSON-LD déclare la réservation, comme le site"
+  vert "le JSON-LD dit la même chose que le site sur la réservation"
 else
-  rouge "le JSON-LD contredit le formulaire de réservation"
+  rouge "le JSON-LD et le site se contredisent sur la réservation"
 fi
 
 echo
