@@ -610,7 +610,44 @@ section {
   overflow: hidden;
 }
 
+/* Date, service et couverts tiennent sur une ligne dès qu'il y a la place ;
+   empilés sinon, sans point de rupture arbitraire. */
+.formulaire__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.2rem;
+}
+
+.formulaire__ligne .formulaire__champ {
+  flex: 1 1 11rem;
+}
+
+.formulaire select {
+  width: 100%;
+  padding: 0.55rem 0.1rem;
+  border: none;
+  border-bottom: 1px solid var(--filet);
+  border-radius: 0;
+  background: transparent;
+  color: var(--encre);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.formulaire select:focus {
+  border-color: var(--rouge);
+}
+
+.note-fermeture {
+  margin: 0 0 1.4rem;
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
 .formulaire__envoi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
   margin: 1.6rem 0 0;
 }
 

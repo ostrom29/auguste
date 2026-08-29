@@ -110,7 +110,22 @@ function json_ld(array $infos, array $categories, string $urlSite): string
         'email' => info($infos, 'email') ?: null,
         'priceRange' => gamme_de_prix($categories),
         'openingHoursSpecification' => horaires_structures($infos),
-        'acceptsReservations' => 'False',
+        'acceptsReservations' => 'True',
+        // Déclare l'adresse où réserver : c'est ce qui permet à Google de
+        // proposer l'action plutôt que de deviner.
+        'potentialAction' => [
+            '@type' => 'ReserveAction',
+            'target' => [
+                '@type' => 'EntryPoint',
+                'urlTemplate' => $urlSite . '/reservation.php',
+                'inLanguage' => 'fr',
+                'actionPlatform' => [
+                    'https://schema.org/DesktopWebPlatform',
+                    'https://schema.org/MobileWebPlatform',
+                ],
+            ],
+            'result' => ['@type' => 'FoodEstablishmentReservation', 'name' => 'Demande de réservation'],
+        ],
     ], static fn ($valeur): bool => $valeur !== null && $valeur !== [] && $valeur !== '');
 
     return implode("\n", [

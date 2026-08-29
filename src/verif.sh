@@ -133,13 +133,62 @@ else
   rouge "le JSON-LD est absent ou mal formé"
 fi
 
+dans index.html 'reservation.php'         "le menu mène à la réservation"
+
+# Une contradiction entre le JSON-LD et le site enverrait Google dire aux
+# clients qu'on ne réserve pas pendant que la page propose de réserver.
+if python3 -c "
+import json, re, sys
+h = open('public/index.html', encoding='utf-8').read()
+d = json.loads(re.search(r'<script type=\"application/ld\+json\">(.*?)</script>', h, re.S).group(1))
+sys.exit(0 if d.get('acceptsReservations') == 'True'
+         and d.get('potentialAction', {}).get('@type') == 'ReserveAction' else 1)
+" 2>/dev/null; then
+  vert "le JSON-LD déclare la réservation, comme le site"
+else
+  rouge "le JSON-LD contredit le formulaire de réservation"
+fi
+
 echo
-echo "Formulaire de contact"
+echo "Formulaires"
+
+# Les heures proposées doivent venir des horaires, jamais d'une liste figée :
+# le restaurateur change ses horaires dans le Sheet, pas dans le code.
+if php -r '
+$g = require "public/gabarit.php";
+$heures = $g["heures"];
+$ok = $heures !== [];
+// Une heure proposée doit tomber dans au moins une plage, celle de n importe
+// quel jour : avec deux services, midi et soir ont chacun les leurs.
+foreach ($heures as $h) {
+    $trouvee = false;
+    foreach ($g["horaires"] as $plages) {
+        foreach ($plages as [$debut, $fin]) {
+            if ($h >= $debut && $h <= $fin) { $trouvee = true; }
+        }
+    }
+    if (!$trouvee) { $ok = false; }
+}
+exit($ok ? 0 : 1);
+' 2>/dev/null; then
+  vert "les heures proposées tiennent dans les horaires du Sheet"
+else
+  rouge "des heures proposées tombent hors des horaires"
+fi
+
+if php -r '
+$g = require "public/gabarit.php";
+exit(isset($g["entetes"]["contact.php"], $g["entetes"]["reservation.php"]) ? 0 : 1);
+' 2>/dev/null; then
+  vert "le gabarit porte un en-tête par page dynamique"
+else
+  rouge "le gabarit ne couvre pas les deux formulaires"
+fi
 
 # Le nom part dans le sujet du courriel : un saut de ligne y permettrait
 # d'injecter un « Bcc: ». Le message, lui, doit garder ses retours à la ligne.
 if php -r '
-require "public/contact.php";
+require "src/lib/formulaire.php";
 $nom = nettoyer("Pirate\nBcc: victime@example.com", true);
 $msg = nettoyer("ligne un\nligne deux", false);
 exit((strpos($nom, "\n") === false && strpos($msg, "\n") !== false) ? 0 : 1);

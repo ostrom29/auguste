@@ -13,10 +13,80 @@ require_once __DIR__ . '/rendu.php';
 const PAGES_INDEXEES = [
     '' => '1.0',
     'carte.html' => '0.9',
+    'reservation.php' => '0.7',
     'contact.php' => '0.5',
     'mentions-legales.html' => '0.2',
     'confidentialite.html' => '0.2',
 ];
+
+/** Une table se prend au moins une demi-heure avant la fermeture. */
+const DERNIERE_ARRIVEE = 30;
+
+/** Pas des créneaux proposés, en minutes. */
+const PAS_RESERVATION = 30;
+
+/**
+ * Les plages d'ouverture, jour par jour, telles quelles.
+ *
+ * On ne les interprète pas en « midi » et « soir » : un bouillon peut servir
+ * en continu, et ce découpage n'aurait alors aucun sens. La demande de
+ * réservation s'en sert pour ne proposer que des heures possibles, et pour
+ * refuser tout de suite un jour de fermeture.
+ *
+ * @param array<string, string> $infos
+ * @return array<string, list<array{0: string, 1: string}>>
+ */
+function horaires_par_jour(array $infos): array
+{
+    $par_jour = [];
+
+    foreach (array_keys(JOURS_SEMAINE) as $jour) {
+        $par_jour[$jour] = decouper_creneaux(info($infos, 'horaires_' . $jour));
+    }
+
+    return $par_jour;
+}
+
+/**
+ * Toutes les heures proposables, tous jours confondus.
+ *
+ * Sans JavaScript, la liste ne peut pas s'adapter à la date choisie : on
+ * propose donc l'union, et le serveur refuse précisément ce qui ne convient
+ * pas au jour demandé.
+ *
+ * @param array<string, list<array{0: string, 1: string}>> $horaires
+ * @return list<string>
+ */
+function heures_proposables(array $horaires): array
+{
+    $minutes = [];
+
+    foreach ($horaires as $plages) {
+        foreach ($plages as [$debut, $fin]) {
+            $depuis = en_minutes($debut);
+            $jusqu = en_minutes($fin) - DERNIERE_ARRIVEE;
+
+            // On arrondit au pas supérieur pour ne pas proposer 11h07.
+            for ($m = (int) ceil($depuis / PAS_RESERVATION) * PAS_RESERVATION; $m <= $jusqu; $m += PAS_RESERVATION) {
+                $minutes[$m] = true;
+            }
+        }
+    }
+
+    ksort($minutes);
+
+    return array_map(
+        static fn (int $m): string => sprintf('%02d:%02d', intdiv($m, 60), $m % 60),
+        array_keys($minutes)
+    );
+}
+
+function en_minutes(string $heure): int
+{
+    [$h, $m] = array_map('intval', explode(':', $heure));
+
+    return $h * 60 + $m;
+}
 
 function rendre_robots(string $urlSite): string
 {
@@ -118,16 +188,30 @@ function rendre_404(array $infos): string
  */
 function rendre_gabarit(array $infos, string $urlSite): string
 {
+    $horaires = horaires_par_jour($infos);
+
+    // Un en-tête par page dynamique : chacune doit voir son entrée de menu
+    // marquée comme courante.
+    $entetes = [];
+
+    foreach (['contact.php', 'reservation.php'] as $page) {
+        $entetes[$page] = rendre_entete($infos, 'interieure', $page);
+    }
+
     $donnees = [
-        // L'en-tête est rendu pour contact.php : c'est la seule page dynamique,
-        // et son entrée de menu doit s'afficher comme la page courante.
-        'entete' => rendre_entete($infos, 'interieure', 'contact.php'),
+        'entetes' => $entetes,
         'pied' => rendre_pied($infos),
         'style' => ressource('style.css'),
         'nom' => info($infos, 'nom', NOM_PAR_DEFAUT),
         'email' => info($infos, 'email'),
         'telephone' => info($infos, 'telephone'),
         'url_site' => $urlSite,
+        // Les plages d'ouverture, jour par jour, déduites des horaires du
+        // Sheet. La demande de réservation ne propose que des heures
+        // possibles, et refuse tout de suite un jour de fermeture plutôt que
+        // de laisser le client attendre une réponse.
+        'horaires' => $horaires,
+        'heures' => heures_proposables($horaires),
     ];
 
     return implode("\n", [

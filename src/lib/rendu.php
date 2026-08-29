@@ -217,10 +217,11 @@ function document(string $classe, string $titre, array $tete, string $corps): st
     return str_replace(ESPACE_INSECABLE, '&#160;', $html);
 }
 
-/** Le menu principal : trois entrées, assez courtes pour tenir sur une ligne. */
+/** Le menu principal : des libellés courts, qui se replient si besoin. */
 const MENU = [
     'index.html' => 'Accueil',
     'carte.html' => 'La carte',
+    'reservation.php' => 'Réserver',
     'contact.php' => 'Nous écrire',
 ];
 
@@ -391,11 +392,16 @@ function rendre_coordonnees(array $infos): string
     array_push($bloc, ...$lignes);
     $bloc[] = '      </address>';
 
+    $actions = [];
+
     if ($telephone !== '') {
-        $bloc[] = '      <p class="coordonnees__appel">'
-            . '<a class="bouton" href="tel:' . e(lien_telephone($telephone)) . '">'
-            . 'Appeler le ' . e($telephone) . '</a></p>';
+        $actions[] = '<a class="bouton" href="tel:' . e(lien_telephone($telephone)) . '">'
+            . 'Appeler le ' . e($telephone) . '</a>';
     }
+
+    $actions[] = '<a class="bouton bouton--discret" href="reservation.php">Réserver une table</a>';
+
+    $bloc[] = '      <p class="coordonnees__appel">' . implode("\n        ", $actions) . '</p>';
 
     $bloc[] = '    </section>';
 
