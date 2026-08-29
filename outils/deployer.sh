@@ -43,7 +43,7 @@ echo "  envoyé"
 
 titre "Ressources servies → ~/public_html/"
 # Seulement ce qui est versionné : les pages sont écrites par le build distant.
-tar czf - -C public style.css jour.js publier.php contact.php img polices \
+tar czf - -C public style.css jour.js publier.php contact.php reservation.php img polices \
   | $SSH "$HOTE" "tar xzf - -C $DISTANT/public_html"
 echo "  envoyé"
 
@@ -74,8 +74,9 @@ $SSH "$HOTE" "cd $DISTANT/auguste && php src/build.php" || {
 }
 
 titre "Contrôle en HTTPS"
-for chemin in / /carte.html /contact.php /mentions-legales.html /confidentialite.html \
-              /robots.txt /sitemap.xml /style.css /img/partage.jpg /publier.php /page-qui-nexiste-pas; do
+for chemin in / /carte.html /reservation.php /contact.php /mentions-legales.html \
+              /confidentialite.html /robots.txt /sitemap.xml /style.css /img/partage.jpg \
+              /publier.php /page-qui-nexiste-pas; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITE$chemin")
   printf '  %-28s %s\n' "$chemin" "$code"
 done
