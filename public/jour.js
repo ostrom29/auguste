@@ -13,11 +13,17 @@
     'dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'
   ];
 
-  var cible = document.querySelector(
-    '.horaires__jour[data-jour="' + jours[new Date().getDay()] + '"]'
-  );
+  var aujourdhui = jours[new Date().getDay()];
 
-  if (cible) {
-    cible.setAttribute('data-aujourdhui', '');
+  // Le pied de page liste la semaine ; le haut de l'accueil n'affiche que le
+  // jour courant, les autres étant masqués par la feuille de style tant que
+  // le script n'a rien marqué. Sans JavaScript, la semaine entière reste
+  // lisible : c'est une mise en valeur, pas une béquille.
+  var cibles = document.querySelectorAll('[data-jour="' + aujourdhui + '"]');
+
+  for (var i = 0; i < cibles.length; i++) {
+    cibles[i].setAttribute('data-aujourdhui', '');
   }
+
+  document.documentElement.setAttribute('data-jour-connu', '');
 })();

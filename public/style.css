@@ -44,6 +44,10 @@
   --creme-fonce: #f3ebdd;
   --rouge: #a01e23;
   --rouge-sombre: #7d1519;
+  /* Le bordeaux des banquettes : il ne sert qu'à poser le pied de page, pour
+     que la page ait une base au lieu de s'arrêter. Ce n'est pas une seconde
+     couleur d'accent — il n'apparaît nulle part ailleurs. */
+  --bordeaux: #55151a;
   --encre: #2a2320;
   --encre-douce: #6e625a;
   --filet: #e0d5c4;
@@ -77,6 +81,14 @@ body {
 img {
   max-width: 100%;
   height: auto;
+}
+
+/* Chiffres alignés et de largeur fixe : dans une colonne de prix, c'est ce
+   qui fait la différence entre une liste et une carte imprimée. */
+.plat__prix,
+.horaires__valeur,
+.aujourdhui b {
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 a {
@@ -263,6 +275,47 @@ h3 {
   color: var(--encre-douce);
 }
 
+/* --------------------------------------------------------------- Ornement */
+
+/* La volute du logo, réutilisée seule pour séparer les grandes sections. */
+.ornement {
+  display: block;
+  width: min(15rem, 55%);
+  height: auto;
+  margin: 2.5rem auto;
+  opacity: 0.75;
+}
+
+/* ------------------------------------------------- Les horaires du jour */
+
+.aujourdhui {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--encre-douce);
+}
+
+[data-jour-connu] .aujourdhui {
+  margin-bottom: 2rem;
+}
+
+.aujourdhui b {
+  font-weight: 600;
+  color: var(--encre);
+}
+
+/* Rien tant que le script n'a pas dit quel jour on est : sans lui, ce bloc
+   afficherait les sept lignes de la semaine, presque identiques, en haut de
+   page. L'information n'est pas perdue pour autant — le pied de page donne
+   la semaine entière, sans JavaScript. */
+.aujourdhui__jour {
+  display: none;
+}
+
+[data-jour-connu] .aujourdhui__jour[data-aujourdhui] {
+  display: block;
+}
+
 /* -------------------------------------------------------------------- Blocs */
 
 main {
@@ -410,10 +463,35 @@ section {
 
 /* ----------------------------------------------------------------- Horaires */
 
+/* Le bordeaux des banquettes pose la page : sans lui, elle s'arrêtait
+   plutôt qu'elle ne se terminait. */
 .pied {
-  margin-top: 3.5rem;
-  padding: 2.5rem var(--marge) 3rem;
-  background: var(--creme-fonce);
+  margin-top: 4rem;
+  padding: 3rem var(--marge);
+  background: var(--bordeaux);
+  color: var(--creme);
+}
+
+.pied a {
+  color: var(--creme);
+}
+
+.pied a:hover,
+.pied a:focus {
+  color: #fff;
+}
+
+.pied .horaires__titre {
+  color: var(--creme);
+}
+
+.pied .horaires__titre::after {
+  border-top-color: var(--creme);
+  opacity: 0.5;
+}
+
+.pied .horaires__valeur {
+  color: rgba(251, 247, 240, 0.72);
 }
 
 .horaires {
@@ -444,17 +522,14 @@ section {
 
 /* Posé par jour.js. Sans script, la semaine reste lisible telle quelle. */
 .horaires__jour[data-aujourdhui] {
-  background: var(--creme);
+  background: rgba(251, 247, 240, 0.12);
   border-radius: 2px;
 }
 
-.horaires__jour[data-aujourdhui] .horaires__nom {
-  font-weight: 600;
-  color: var(--rouge);
-}
-
+.horaires__jour[data-aujourdhui] .horaires__nom,
 .horaires__jour[data-aujourdhui] .horaires__valeur {
-  color: var(--encre);
+  font-weight: 600;
+  color: #fff;
 }
 
 .pied__telephone {
@@ -709,6 +784,31 @@ section {
   }
 }
 
+/* Sur large écran, la carte se lit sur deux colonnes, comme un menu imprimé.
+   Le reste du site garde sa colonne unique : c'est une page de lecture, pas
+   une liste. */
+@media (min-width: 62rem) {
+  .page--carte main {
+    max-width: 58rem;
+  }
+
+  .categorie__plats {
+    columns: 2;
+    column-gap: 3.5rem;
+  }
+
+  /* Un plat ne doit jamais être coupé entre deux colonnes. */
+  .plat {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .plat + .plat {
+    margin-top: 0;
+    padding-top: 1.4rem;
+  }
+}
+
 /* ---------------------------------------------------------------- Impression */
 
 /* Une carte, ça s'imprime. On enlève le décor et on économise l'encre. */
@@ -717,7 +817,10 @@ section {
   .banniere,
   .bouton,
   .menu,
+  .ornement,
+  .aujourdhui,
   .pied__liens,
+  .pied__reseaux,
   .vedettes__lien,
   .entete__accroche {
     display: none;
@@ -729,8 +832,16 @@ section {
     font-size: 11pt;
   }
 
-  .pied {
+  /* Le fond bordeaux mangerait une cartouche entière. */
+  .pied,
+  .pied a,
+  .pied .horaires__titre,
+  .pied .horaires__valeur {
     background: none;
+    color: #000;
+  }
+
+  .pied {
     border-top: 1px solid #999;
   }
 

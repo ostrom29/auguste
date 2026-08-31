@@ -116,6 +116,42 @@ def preparer_photo(source: Path) -> None:
             print(f"  salle-{largeur}.{extension:<5} {largeur:>4} px   {poids(cible)}")
 
 
+def preparer_ornement(source: Path) -> None:
+    """Extrait la fioriture qui coiffe l'enseigne, pour la réutiliser seule.
+
+    Elle sert de séparation entre les grandes sections. Reprendre un motif que
+    le logo contient déjà lie la page à l'identité sans rien inventer — et ne
+    coûte que quelques kilo-octets, puisque le dessin existe.
+    """
+    masque = SORTIE / "_orn.png"
+
+    # La bande supérieure du dessin, avant le mot « CHEZ ». Le -trim resserre
+    # ensuite sur le motif lui-même, donc le pourcentage n'a pas à être exact.
+    executer([
+        "convert", str(source),
+        "-colorspace", "Gray", "-negate", "-level", LOGO_PLAGE,
+        "-trim", "+repage",
+        "-gravity", "North", "-crop", "100%x18%+0+0", "+repage",
+        "-trim", "+repage",
+        str(masque),
+    ])
+
+    for nom, largeur in (("ornement-2x.png", 840), ("ornement.png", 420)):
+        cible = SORTIE / nom
+        executer([
+            "convert",
+            str(masque), "-fill", LOGO_ROUGE, "-colorize", "100",
+            str(masque), "-alpha", "off",
+            "-compose", "CopyOpacity", "-composite",
+            "-resize", f"{largeur}x",
+            "-strip", "-define", "png:compression-level=9",
+            str(cible),
+        ])
+        print(f"  {nom:<16} {largeur:>4} px   {poids(cible)}")
+
+    masque.unlink()
+
+
 def preparer_partage(photo: Path, logo: Path) -> None:
     """L'image que WhatsApp, Facebook et Slack affichent avec le lien.
 
@@ -167,6 +203,8 @@ def main() -> None:
     if logo.is_file():
         print("Logo")
         preparer_logo(logo)
+        print("\nOrnement")
+        preparer_ornement(logo)
 
     if photo.is_file():
         print("\nPhoto de salle")

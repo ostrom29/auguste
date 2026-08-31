@@ -126,7 +126,9 @@ function rendre_accueil(array $vedettes, array $infos, array $categories, string
             rendre_entete($infos, 'accueil', 'index.html'),
             rendre_banniere($infos),
             '  <main id="contenu">',
+            rendre_aujourdhui($infos),
             rendre_message($infos),
+            rendre_ornement(),
             rendre_coordonnees($infos),
             rendre_vedettes($vedettes),
             '  </main>',
@@ -392,6 +394,50 @@ function lien_externe(array $infos, string $cle): string
     }
 
     return $url;
+}
+
+/**
+ * La fioriture du logo, réutilisée seule comme séparation.
+ *
+ * Décorative et rien d'autre : elle est retirée aux lecteurs d'écran, qui
+ * n'ont que faire d'une volute.
+ */
+function rendre_ornement(): string
+{
+    return '    <img class="ornement" src="img/ornement.png"'
+        . ' srcset="img/ornement.png 420w, img/ornement-2x.png 840w"'
+        . ' width="420" height="52" alt="" aria-hidden="true" decoding="async">';
+}
+
+/**
+ * Les horaires du jour, en haut de page.
+ *
+ * Le site étant pré-généré, il ne dit jamais « ouvert en ce moment » — ce
+ * serait faux la plupart du temps. Il donne l'horaire du jour, et jour.js
+ * met le bon en évidence.
+ *
+ * @param array<string, string> $infos
+ */
+function rendre_aujourdhui(array $infos): string
+{
+    $lignes = [];
+
+    foreach (JOURS_SEMAINE as $cle => $libelle) {
+        $horaire = info($infos, 'horaires_' . $cle);
+
+        $lignes[] = sprintf(
+            '      <span class="aujourdhui__jour" data-jour="%s">%s <b>%s</b></span>',
+            e($cle),
+            e($libelle),
+            e($horaire !== '' ? $horaire : 'fermé')
+        );
+    }
+
+    return implode("\n", array_merge(
+        ['    <p class="aujourdhui">'],
+        $lignes,
+        ['    </p>']
+    ));
 }
 
 /**
