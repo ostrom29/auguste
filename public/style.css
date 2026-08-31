@@ -570,8 +570,10 @@ section {
   border-top: 1px solid var(--filet);
 }
 
+/* Crème atténué, pas la couleur d'encre : sur le bordeaux du pied, --encre-douce
+   tombait à 2,36:1 et les liens légaux étaient à peine visibles. */
 .pied__liens a {
-  color: var(--encre-douce);
+  color: rgba(251, 247, 240, 0.7);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -580,7 +582,7 @@ section {
 
 .pied__liens a:hover,
 .pied__liens a:focus {
-  color: var(--rouge);
+  color: #fff;
   text-decoration: underline;
   text-underline-offset: 0.25em;
 }
@@ -810,11 +812,15 @@ section {
   .plat {
     break-inside: avoid;
     page-break-inside: avoid;
+    /* L'espacement passe en bas de chaque plat plutôt qu'en haut du suivant :
+       sinon le premier plat de la seconde colonne, qui n'est pas premier dans
+       le document, hérite d'un décalage et les deux colonnes ne partent plus
+       de la même ligne. */
+    margin-bottom: 1.4rem;
   }
 
   .plat + .plat {
     margin-top: 0;
-    padding-top: 1.4rem;
   }
 }
 
