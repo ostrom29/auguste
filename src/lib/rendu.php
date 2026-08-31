@@ -153,11 +153,16 @@ function rendre_accueil(array $vedettes, array $infos, array $categories, string
             rendre_entete($infos, 'accueil', 'index.html'),
             // La photo si elle existe, le bandeau de prix sinon.
             rendre_banniere($infos) ?: rendre_bandeau($infos, $categories),
-            '  <main id="contenu">',
+            // Collée sous l'image, à sa largeur : elle la légende au lieu de
+            // flotter dans le vide, et donne le renseignement qu'on cherche
+            // en premier.
             rendre_aujourdhui($infos),
+            '  <main id="contenu">',
             rendre_message($infos),
-            rendre_ornement(),
             rendre_coordonnees($infos),
+            // L'ornement sépare deux sections. Isolé dans du vide, il ne
+            // séparait rien.
+            rendre_ornement(),
             rendre_vedettes($vedettes),
             '  </main>',
             rendre_pied($infos),
@@ -536,19 +541,24 @@ function rendre_aujourdhui(array $infos): string
 
     foreach (JOURS_SEMAINE as $cle => $libelle) {
         $horaire = info($infos, 'horaires_' . $cle);
+        $ferme = $horaire === '' || mb_strtolower($horaire, 'UTF-8') === 'fermé';
 
+        // Le nom du jour ne sert à rien quand on a déjà dit « aujourd'hui » :
+        // il n'apparaît que dans le pied de page, où toute la semaine est là.
         $lignes[] = sprintf(
-            '      <span class="aujourdhui__jour" data-jour="%s">%s <b>%s</b></span>',
+            '      <span class="aujourdhui__jour" data-jour="%s">'
+            . '<span class="aujourdhui__etiquette">Aujourd’hui</span>'
+            . '<b class="aujourdhui__horaire%s">%s</b></span>',
             e($cle),
-            e($libelle),
-            e($horaire !== '' ? $horaire : 'fermé')
+            $ferme ? ' aujourdhui__horaire--ferme' : '',
+            e($ferme ? 'Fermé' : $horaire)
         );
     }
 
     return implode("\n", array_merge(
-        ['    <p class="aujourdhui">'],
+        ['  <p class="aujourdhui">'],
         $lignes,
-        ['    </p>']
+        ['  </p>']
     ));
 }
 

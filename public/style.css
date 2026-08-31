@@ -64,6 +64,11 @@
   --serif: 'EB Garamond', 'Iowan Old Style', Palatino, 'Palatino Linotype',
     Georgia, serif;
 
+  /* Deux largeurs, et deux seulement. --page cadre les blocs pleine largeur
+     (menu, photo, barre d'horaires) ; --colonne donne au texte une justification
+     lisible, centrée dans la précédente. Trois largeurs qui ne s'accordent pas
+     se lisent comme un accident. */
+  --page: 60rem;
   --colonne: 44rem;
   --marge: 1.25rem;
 }
@@ -171,7 +176,7 @@ h3 {
 /* ------------------------------------------------------------------- En-tête */
 
 .entete {
-  padding: 2.5rem var(--marge) 1.5rem;
+  padding: 2.5rem var(--marge) 0;
   text-align: center;
 }
 
@@ -220,22 +225,25 @@ h3 {
 .menu {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.2rem 1.6rem;
+  gap: 0.4rem 2.2rem;
   justify-content: center;
+  max-width: var(--page);
   /* De l'air sous le logo, qui est recadré au plus près de son dessin. */
-  margin-top: 2.2rem;
-  padding: 0.7rem 0;
-  /* Deux filets, en écho aux traits qui encadrent le nom sur l'enseigne. */
+  margin: 2.2rem auto 0;
+  padding: 1.1rem var(--marge) 0;
+  /* Un seul filet, au-dessus. Deux en faisaient une frise de séparation dans
+     laquelle du texte semblait s'être égaré, au lieu d'une navigation. */
   border-top: 1px solid var(--filet);
-  border-bottom: 1px solid var(--filet);
 }
 
 .menu__lien {
-  padding: 0.2rem 0;
+  padding: 0.15rem 0;
   border-bottom: 2px solid transparent;
   color: var(--encre);
-  font-size: 0.8rem;
-  letter-spacing: 0.16em;
+  /* Une navigation principale ne peut pas être plus petite que le texte
+     courant : elle l'était de moitié. */
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
@@ -265,8 +273,13 @@ h3 {
 
 /* ------------------------------------------------------------------ Bannière */
 
+/* Même largeur que le menu et que la barre d'horaires : les trois bandes du
+   haut de page s'alignent au lieu de flotter à des largeurs différentes.
+   Pas de pleine largeur : la source ne fait que 1062 px, l'agrandir la
+   rendrait floue. */
 .banniere {
-  margin: 0 0 3rem;
+  max-width: var(--page);
+  margin: 0 auto;
 }
 
 .banniere img {
@@ -332,26 +345,45 @@ h3 {
   display: block;
   width: min(15rem, 55%);
   height: auto;
-  margin: 2.5rem auto;
+  margin: 0 auto 3rem;
   opacity: 0.75;
 }
 
 /* ------------------------------------------------- Les horaires du jour */
 
+/* Une barre collée sous la photo, à sa largeur : elle la légende plutôt que
+   de flotter dans le vide, et donne le renseignement qu'on cherche d'abord. */
 .aujourdhui {
-  margin: 0;
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0;
   text-align: center;
-  font-size: 0.95rem;
-  color: var(--encre-douce);
 }
 
 [data-jour-connu] .aujourdhui {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+  padding: 0.85rem var(--marge);
+  background: var(--creme-fonce);
+  border-bottom: 1px solid var(--filet);
 }
 
-.aujourdhui b {
+.aujourdhui__etiquette {
+  margin-right: 0.7rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rouge);
+}
+
+.aujourdhui__horaire {
   font-weight: 600;
+  font-size: 1.05rem;
   color: var(--encre);
+}
+
+.aujourdhui__horaire--ferme {
+  font-weight: 400;
+  color: var(--encre-douce);
 }
 
 /* Rien tant que le script n'a pas dit quel jour on est : sans lui, ce bloc
@@ -832,10 +864,8 @@ section {
     padding-top: 4rem;
   }
 
-  .banniere {
-    max-width: 60rem;
-    margin: 0 auto 3.5rem;
-    padding: 0 var(--marge);
+  .entete {
+    padding-bottom: 0;
   }
 
   .plat__nom {
