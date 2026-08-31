@@ -246,7 +246,10 @@ h3 {
   max-width: var(--page);
   /* De l'air sous le logo, qui est recadré au plus près de son dessin, et
      sous le menu, sinon il colle au haut de la photo. */
-  margin: 2.2rem auto 0;
+  /* L'air en dessous n'est pas de l'agrément : sans elle, le bandeau touchait
+     la photo et les deux se lisaient comme un seul bloc. Le menu se faisait
+     absorber par l'image au lieu d'appartenir à l'en-tête. */
+  margin: 2.2rem auto 2.5rem;
   /* Marges latérales réduites : c'est une bande, pas du texte à justifier.
      Les vingt pixels récupérés de chaque côté sont ce qui manquait aux trois
      entrées pour tenir sur une ligne à 390 px. */
