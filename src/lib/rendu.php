@@ -61,6 +61,27 @@ function ressource(string $fichier, string $prefixe = ''): string
 }
 
 /**
+ * Une photo de la salle est-elle disponible ?
+ *
+ * C'est la présence du fichier qui décide, pas une case du tableur : déposer
+ * l'image et lancer le build suffit à la faire apparaître, et la retirer la
+ * fait disparaître. Une clé « photo » à « non » permet de la masquer sans la
+ * supprimer.
+ *
+ * Posé une fois par le générateur, comme les empreintes.
+ */
+function photo_disponible(?bool $valeur = null): bool
+{
+    static $disponible = false;
+
+    if ($valeur !== null) {
+        $disponible = $valeur;
+    }
+
+    return $disponible;
+}
+
+/**
  * Calcule les empreintes des ressources présentes dans le dossier de sortie.
  *
  * @return array<string, string>
@@ -95,9 +116,15 @@ function info(array $infos, string $cle, string $defaut = ''): string
     return $valeur !== '' ? $valeur : $defaut;
 }
 
-/** La photo d'ambiance, dans ses trois largeurs préparées par outils/images.py. */
-const SALLE_LARGEURS = [340, 480, 679];
-const SALLE_HAUTEUR = 452;
+/**
+ * La photo d'ambiance, dans ses trois largeurs préparées par outils/images.py.
+ *
+ * Recadrée en 3:2 quelle que soit la source : une image presque carrée en
+ * pleine largeur ferait un bloc qui repousse tout le contenu sous la ligne
+ * de flottaison.
+ */
+const SALLE_LARGEURS = [420, 720, 1040];
+const SALLE_RATIO = 1.5;
 
 // ---------------------------------------------------------------------------
 // Les deux pages
@@ -419,9 +446,13 @@ function rendre_banniere(array $infos): string
 {
     $legende = info($infos, 'legende_photo');
 
-    // La photo ne s'affiche que si on l'a explicitement demandée : tant qu'il
-    // n'y a pas de vraie image du lieu, le bandeau tient la place.
-    if (mb_strtolower(info($infos, 'photo', 'non'), 'UTF-8') !== 'oui') {
+    // Pas d'image préparée : le bandeau de prix tient la place.
+    if (!photo_disponible()) {
+        return '';
+    }
+
+    // Échappatoire : « photo » à « non » masque une image pourtant présente.
+    if (mb_strtolower(info($infos, 'photo', 'oui'), 'UTF-8') === 'non') {
         return '';
     }
 
@@ -433,15 +464,17 @@ function rendre_banniere(array $infos): string
         $jpeg[] = sprintf('img/salle-%1$d.jpg %1$dw', $largeur);
     }
 
-    $tailles = '(min-width: 46rem) 44rem, 100vw';
+    $tailles = '(min-width: 60rem) 58rem, 100vw';
     $pleine = max(SALLE_LARGEURS);
+    $hauteur = (int) round($pleine / SALLE_RATIO);
 
     $lignes = [
         '  <figure class="banniere">',
         '    <picture>',
         '      <source type="image/webp" srcset="' . implode(', ', $webp) . '" sizes="' . $tailles . '">',
+        // width et height évitent que la page saute quand l'image arrive.
         '      <img src="img/salle-' . $pleine . '.jpg" srcset="' . implode(', ', $jpeg) . '"'
-            . ' sizes="' . $tailles . '" width="' . $pleine . '" height="' . SALLE_HAUTEUR . '"'
+            . ' sizes="' . $tailles . '" width="' . $pleine . '" height="' . $hauteur . '"'
             . ' alt="' . e($legende !== '' ? $legende : 'La salle du restaurant') . '" decoding="async">',
         '    </picture>',
     ];

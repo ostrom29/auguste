@@ -80,6 +80,10 @@ function generer(string $source, string $racine): array
         // Les empreintes se calculent avant tout rendu : les pages y référent.
         empreintes(calculer_empreintes($dossier));
 
+        // De même pour la photo : c'est sa présence sur le disque qui décide
+        // si la page l'affiche, pas un réglage à tenir à jour en double.
+        photo_disponible(is_file($dossier . '/img/salle-' . max(SALLE_LARGEURS) . '.jpg'));
+
         $pages = [
             'index.html' => rendre_accueil($carte['vedettes'], $infos, $carte['categories'], $url),
             'carte.html' => rendre_carte($carte['categories'], $infos, $url),

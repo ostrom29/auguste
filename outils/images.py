@@ -44,9 +44,10 @@ CREME = "#FBF7F0"
 # masque et empêcherait le recadrage.
 LOGO_PLAGE = "30%,50%"
 
-# La photo source ne fait que 679 px de large : on ne l'agrandit pas, ça ne
-# ferait qu'ajouter du flou et du poids.
-SALLE_LARGEURS = (340, 480, 679)
+# Largeurs et proportion de la bannière. Doivent rester d'accord avec
+# SALLE_LARGEURS et SALLE_RATIO dans src/lib/rendu.php.
+SALLE_LARGEURS = (420, 720, 1040)
+SALLE_RATIO = 1.5  # 3:2, recadré au centre quelle que soit la source
 
 
 def executer(arguments: list[str]) -> None:
@@ -95,14 +96,20 @@ def preparer_logo(source: Path) -> None:
 
 
 def preparer_photo(source: Path) -> None:
-    """Sort la photo en WebP et en JPEG, à trois largeurs."""
+    """Sort la photo en WebP et en JPEG, à trois largeurs, recadrée en 3:2."""
     for largeur in SALLE_LARGEURS:
+        hauteur = round(largeur / SALLE_RATIO)
+
         for extension, qualite in (("jpg", "80"), ("webp", "72")):
             cible = SORTIE / f"salle-{largeur}.{extension}"
             arguments = [
                 "convert", str(source),
                 "-strip",
-                "-resize", f"{largeur}x",
+                # ^ remplit la boîte, -extent recadre au centre : on garde le
+                # coeur de l'image plutôt que de la déformer.
+                "-resize", f"{largeur}x{hauteur}^",
+                "-gravity", "center",
+                "-extent", f"{largeur}x{hauteur}",
                 "-quality", qualite,
             ]
 
@@ -116,7 +123,7 @@ def preparer_photo(source: Path) -> None:
                 arguments += ["-interlace", "Plane"]
 
             executer(arguments + [str(cible)])
-            print(f"  salle-{largeur}.{extension:<5} {largeur:>4} px   {poids(cible)}")
+            print(f"  salle-{largeur}.{extension:<5} {largeur}x{hauteur:<4}   {poids(cible)}")
 
 
 def preparer_ornement(source: Path) -> None:
@@ -190,7 +197,14 @@ def main() -> None:
     SORTIE.mkdir(parents=True, exist_ok=True)
 
     logo = SOURCES / "logo.jpg"
-    photo = SOURCES / "bouillon.jpg"
+
+    # La photo de la salle, sous l'un des noms acceptés. Son absence n'est pas
+    # une erreur : le site affiche alors son bandeau de prix.
+    photo = next(
+        (SOURCES / n for n in ("salle.jpg", "salle.png", "salle.jpeg", "salle.webp")
+         if (SOURCES / n).is_file()),
+        SOURCES / "salle.jpg",
+    )
 
     if logo.is_file():
         print("Logo")
