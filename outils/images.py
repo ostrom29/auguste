@@ -47,7 +47,14 @@ LOGO_PLAGE = "30%,50%"
 # Largeurs et proportion de la bannière. Doivent rester d'accord avec
 # SALLE_LARGEURS et SALLE_RATIO dans src/lib/rendu.php.
 SALLE_LARGEURS = (420, 720, 1040)
-SALLE_RATIO = 1.5  # 3:2, recadré au centre quelle que soit la source
+SALLE_RATIO = 1.5  # 3:2
+
+# Quelle part du surplus de hauteur on retire par le haut. À 0,5 le cadrage
+# serait centré ; à 0,27 il remonte, ce qui garde les suspensions et la
+# hauteur sous plafond — c'est ce qui donne son caractère à la salle — et
+# rogne le sol, qui n'apporte rien passé la moitié du cadre.
+# Exprimé en proportion et non en pixels, pour tenir avec une autre photo.
+SALLE_CADRAGE = 0.27
 
 
 def executer(arguments: list[str]) -> None:
@@ -95,21 +102,34 @@ def preparer_logo(source: Path) -> None:
     masque.unlink()
 
 
+def dimensions(chemin: Path) -> tuple[int, int]:
+    resultat = subprocess.run(
+        ["identify", "-format", "%w %h", str(chemin)],
+        capture_output=True, text=True, check=True,
+    )
+    largeur, hauteur = resultat.stdout.split()
+    return int(largeur), int(hauteur)
+
+
 def preparer_photo(source: Path) -> None:
     """Sort la photo en WebP et en JPEG, à trois largeurs, recadrée en 3:2."""
+    source_l, source_h = dimensions(source)
+
     for largeur in SALLE_LARGEURS:
         hauteur = round(largeur / SALLE_RATIO)
+
+        # Hauteur obtenue une fois l'image mise à la largeur voulue, puis part
+        # du surplus retirée par le haut.
+        apres = round(source_h * largeur / source_l)
+        decalage = max(0, round((apres - hauteur) * SALLE_CADRAGE))
 
         for extension, qualite in (("jpg", "80"), ("webp", "72")):
             cible = SORTIE / f"salle-{largeur}.{extension}"
             arguments = [
                 "convert", str(source),
                 "-strip",
-                # ^ remplit la boîte, -extent recadre au centre : on garde le
-                # coeur de l'image plutôt que de la déformer.
-                "-resize", f"{largeur}x{hauteur}^",
-                "-gravity", "center",
-                "-extent", f"{largeur}x{hauteur}",
+                "-resize", f"{largeur}x",
+                "-crop", f"{largeur}x{hauteur}+0+{decalage}", "+repage",
                 "-quality", qualite,
             ]
 
@@ -162,27 +182,52 @@ def preparer_ornement(source: Path) -> None:
     masque.unlink()
 
 
-def preparer_partage() -> None:
+def preparer_partage(photo: Path | None) -> None:
     """L'image que WhatsApp, Facebook et Slack affichent avec le lien.
 
-    1200x630 est le format attendu partout. Tant qu'il n'existe pas de photo
-    du lieu, c'est l'enseigne sur le crème de la page : sobre, juste, et qui
-    ne montre pas la salle de quelqu'un d'autre.
+    1200x630 est le format attendu partout. Avec une photo du lieu, c'est la
+    salle assombrie et l'enseigne posée dessus en blanc — bien plus engageant
+    dans un fil de discussion. Sans photo, l'enseigne sur le crème de la page.
     """
     cible = SORTIE / "partage.jpg"
 
+    if photo is None:
+        executer([
+            "convert",
+            "-size", "1200x630", f"xc:{CREME}",
+            str(SORTIE / "logo-2x.png"), "-gravity", "center",
+            "-geometry", "+0-30", "-composite",
+            str(SORTIE / "ornement-2x.png"), "-gravity", "center",
+            "-geometry", "+0+220", "-composite",
+            "-strip", "-quality", "88", "-interlace", "Plane",
+            str(cible),
+        ])
+        print(f"  partage.jpg      1200x630   {poids(cible)}  (enseigne seule)")
+        return
+
+    blanc = SORTIE / "_logo-blanc.png"
+
+    # Le logo est rouge sur transparent : sur une photo, il faut du blanc.
     executer([
-        "convert",
-        "-size", "1200x630", f"xc:{CREME}",
-        str(SORTIE / "logo-2x.png"), "-gravity", "center",
-        "-geometry", "+0-30", "-composite",
-        str(SORTIE / "ornement-2x.png"), "-gravity", "center",
-        "-geometry", "+0+220", "-composite",
-        "-strip", "-quality", "88", "-interlace", "Plane",
+        "convert", str(SORTIE / "logo-2x.png"),
+        "-fill", "white", "-colorize", "100",
+        "-resize", "520x",
+        str(blanc),
+    ])
+
+    executer([
+        "convert", str(photo),
+        "-resize", "1200x630^",
+        "-gravity", "center", "-extent", "1200x630",
+        # Assombrir pour que le logo blanc se détache sans caisson derrière.
+        "-brightness-contrast", "-22x6",
+        str(blanc), "-gravity", "center", "-composite",
+        "-strip", "-quality", "84", "-interlace", "Plane",
         str(cible),
     ])
 
-    print(f"  partage.jpg      1200x630   {poids(cible)}")
+    blanc.unlink()
+    print(f"  partage.jpg      1200x630   {poids(cible)}  (salle + enseigne)")
 
 
 def main() -> None:
@@ -221,7 +266,7 @@ def main() -> None:
 
     if logo.is_file():
         print("\nImage de partage")
-        preparer_partage()
+        preparer_partage(photo if photo.is_file() else None)
 
     total = sum(f.stat().st_size for f in SORTIE.iterdir() if f.is_file())
     print(f"\n{len(list(SORTIE.iterdir()))} fichiers, {total / 1024:.0f} Ko au total dans public/img/")
