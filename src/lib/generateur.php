@@ -114,6 +114,7 @@ function generer(string $source, string $racine): array
         );
         $resultat['avertissements'] = array_merge(
             avertissements_infos($infos),
+            avertissements_cles_inconnues($infos),
             avertissements_vedettes($carte),
             avertissements_legaux($infos),
             $url === '' ? ['« url_site » n\'est pas configurée : ni balise canonique, '

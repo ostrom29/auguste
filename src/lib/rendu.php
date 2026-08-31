@@ -375,6 +375,26 @@ function rendre_banniere(array $infos): string
 }
 
 /**
+ * Une URL du Sheet, si elle est utilisable comme lien.
+ *
+ * On refuse tout ce qui n'est pas http(s) : une cellule de tableur finit dans
+ * un attribut href, et « javascript: » y serait un script exécuté chez le
+ * visiteur. Le Sheet est de confiance, mais il a plusieurs éditeurs.
+ *
+ * @param array<string, string> $infos
+ */
+function lien_externe(array $infos, string $cle): string
+{
+    $url = info($infos, $cle);
+
+    if ($url === '' || preg_match('#^https?://#i', $url) !== 1) {
+        return '';
+    }
+
+    return $url;
+}
+
+/**
  * Le message du Sheet — fermeture annuelle, jour férié. Rien s'il est vide.
  *
  * @param array<string, string> $infos
@@ -426,6 +446,15 @@ function rendre_coordonnees(array $infos): string
     if ($telephone !== '') {
         $actions[] = '<a class="bouton" href="tel:' . e(lien_telephone($telephone)) . '">'
             . 'Appeler le ' . e($telephone) . '</a>';
+    }
+
+    // L'itinéraire compte autant que l'appel : le restaurant est dans un
+    // centre commercial, où une adresse seule ne suffit pas à trouver la porte.
+    $maps = lien_externe($infos, 'maps');
+
+    if ($maps !== '') {
+        $actions[] = '<a class="bouton bouton--discret" href="' . e($maps) . '"'
+            . ' target="_blank" rel="noopener">Itinéraire</a>';
     }
 
     if (reservation_active($infos)) {
@@ -541,8 +570,30 @@ function rendre_pied(array $infos): string
             . e(lien_telephone($telephone)) . '">' . e($telephone) . '</a></p>';
     }
 
-    // Le menu principal couvre déjà les trois pages du site : le pied ne
-    // reprend que ce qui n'a pas sa place en haut.
+    $reseaux = [
+        'instagram' => 'Instagram',
+        'facebook' => 'Facebook',
+    ];
+
+    $liens = [];
+
+    foreach ($reseaux as $cle => $libelle) {
+        $url = lien_externe($infos, $cle);
+
+        if ($url !== '') {
+            $liens[] = '      <a href="' . e($url) . '" target="_blank" rel="noopener me">'
+                . e($libelle) . '</a>';
+        }
+    }
+
+    if ($liens !== []) {
+        $lignes[] = '    <nav class="pied__reseaux" aria-label="Réseaux sociaux">';
+        array_push($lignes, ...$liens);
+        $lignes[] = '    </nav>';
+    }
+
+    // Le menu principal couvre déjà les pages du site : le pied ne reprend
+    // que ce qui n'a pas sa place en haut.
     $lignes[] = '    <nav class="pied__liens" aria-label="Informations légales">';
     $lignes[] = '      <a href="mentions-legales.html">Mentions légales</a>';
     $lignes[] = '      <a href="confidentialite.html">Confidentialité</a>';

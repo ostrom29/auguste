@@ -106,6 +106,13 @@ function json_ld(array $infos, array $categories, string $urlSite): string
         'servesCuisine' => 'Française',
         'menu' => $urlSite . '/carte.html',
         'address' => adresse_postale($infos),
+        // Le lien Maps et les réseaux nourrissent la fiche que Google affiche
+        // à côté des résultats.
+        'hasMap' => lien_externe($infos, 'maps') ?: null,
+        'sameAs' => array_values(array_filter([
+            lien_externe($infos, 'instagram'),
+            lien_externe($infos, 'facebook'),
+        ])),
         'telephone' => telephone_international($infos),
         'email' => info($infos, 'email') ?: null,
         'priceRange' => gamme_de_prix($categories),

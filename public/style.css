@@ -462,6 +462,20 @@ section {
   text-align: center;
 }
 
+.pied__reseaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.6rem;
+  justify-content: center;
+  margin-top: 2.2rem;
+}
+
+.pied__reseaux a {
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-underline-offset: 0.25em;
+}
+
 .pied__liens {
   display: flex;
   flex-wrap: wrap;

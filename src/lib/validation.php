@@ -34,6 +34,25 @@ const INFOS_CLES_ATTENDUES = [
 ];
 
 /**
+ * Toutes les clés que le générateur sait lire.
+ *
+ * Sert à repérer celles qu'il ne connaît pas. Une cellule remplie dont rien
+ * ne sort est pire qu'une cellule vide : personne ne s'aperçoit du travail
+ * perdu, et la page ment par omission.
+ */
+const INFOS_CLES_CONNUES = [
+    // Identité et coordonnées
+    'nom', 'accroche', 'description', 'adresse', 'acces', 'telephone', 'email',
+    // Liens sortants
+    'maps', 'instagram', 'facebook',
+    // Affichage
+    'message', 'photo', 'legende_photo', 'reservation',
+    // Mentions légales
+    'raison_sociale', 'forme_juridique', 'capital_social', 'siret',
+    'directeur_publication', 'rcs_ville', 'tva', 'hebergeur',
+];
+
+/**
  * Vérifie l'onglet « carte ».
  *
  * @param array{entetes: list<string>, lignes: list<array{numero: int, champs: array<string, string>}>} $csv
@@ -141,6 +160,35 @@ function avertissements_infos(array $infos): array
     return [sprintf(
         'onglet infos, clé(s) absente(s) ou vide(s) : %s',
         implode(', ', $manquantes)
+    )];
+}
+
+/**
+ * Les clés de l'onglet infos que le générateur ne sait pas lire.
+ *
+ * @param array<string, string> $infos
+ * @return list<string>
+ */
+function avertissements_cles_inconnues(array $infos): array
+{
+    $inconnues = [];
+
+    foreach (array_keys($infos) as $cle) {
+        if (str_starts_with($cle, 'horaires_') || in_array($cle, INFOS_CLES_CONNUES, true)) {
+            continue;
+        }
+
+        $inconnues[] = $cle;
+    }
+
+    if ($inconnues === []) {
+        return [];
+    }
+
+    return [sprintf(
+        'onglet infos, clé(s) que le site ne sait pas afficher : %s. '
+        . 'La valeur est saisie mais n\'apparaît nulle part.',
+        implode(', ', $inconnues)
     )];
 }
 
