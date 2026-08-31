@@ -151,6 +151,16 @@ else
 fi
 
 echo
+echo "Contrastes"
+# Variable distincte : $sortie est le fichier temporaire du script.
+if rapport_contraste=$(python3 outils/contraste.py); then
+  echo "$rapport_contraste" | grep -E '^  (ok|KO)' | sed 's/^/  /'
+else
+  echo "$rapport_contraste" | sed 's/^/  /'
+  rouge "des contrastes sont sous le seuil WCAG"
+fi
+
+echo
 echo "Formulaires"
 
 # Les heures proposées doivent venir des horaires, jamais d'une liste figée :

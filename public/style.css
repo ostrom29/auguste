@@ -50,7 +50,16 @@
   --bordeaux: #55151a;
   --encre: #2a2320;
   --encre-douce: #6e625a;
+
+  /* Deux filets, et la différence n'est pas cosmétique.
+     --filet ne sert qu'au décor : traits de séparation, pointillé entre le
+     nom et le prix. À 1,36:1 sur le crème il est discret, ce qui est le but,
+     et les éléments décoratifs n'ont pas de seuil de contraste.
+     --filet-champ borde ce qui se clique et se remplit. WCAG demande 3:1
+     pour la limite visible d'un élément interactif : c'est la teinte la plus
+     claire qui l'atteigne (3,05:1), calculée, pas choisie à l'œil. */
   --filet: #e0d5c4;
+  --filet-champ: #a18b70;
 
   --serif: 'EB Garamond', 'Iowan Old Style', Palatino, 'Palatino Linotype',
     Georgia, serif;
@@ -661,7 +670,7 @@ section {
   width: 100%;
   padding: 0.55rem 0.1rem;
   border: none;
-  border-bottom: 1px solid var(--filet);
+  border-bottom: 1px solid var(--filet-champ);
   border-radius: 0;
   background: transparent;
   color: var(--encre);
@@ -672,7 +681,7 @@ section {
 
 .formulaire textarea {
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--filet);
+  border: 1px solid var(--filet-champ);
   resize: vertical;
 }
 
@@ -715,7 +724,7 @@ section {
   width: 100%;
   padding: 0.55rem 0.1rem;
   border: none;
-  border-bottom: 1px solid var(--filet);
+  border-bottom: 1px solid var(--filet-champ);
   border-radius: 0;
   background: transparent;
   color: var(--encre);
