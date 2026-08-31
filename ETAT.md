@@ -63,6 +63,32 @@ dans un sens comme dans l'autre.
 
 ## Les commandes
 
+### Vérifier le rendu visuel
+
+Le contrôle des couleurs déclarées se fait sans navigateur :
+
+```
+python3 outils/contraste.py
+```
+
+Mais une couleur déclarée n'est pas une couleur appliquée : la cascade peut en
+remplacer une par une autre en silence. Pour les styles réellement calculés,
+et pour les captures d'écran, il faut un navigateur sans interface. Il est
+installé dans `~/outils-navigateur`, et `NODE_PATH` est indispensable — sans
+lui, le script ne trouve pas `patchright` :
+
+```
+cd /mnt/c/Users/gando/.codegpt/skills/browser-automation
+NODE_PATH=~/outils-navigateur/node_modules \
+  node browser.mjs https://chezauguste.com/ \
+  --script ~/auguste/Auguste/outils/audit-contraste.mjs
+```
+
+Le même `browser.mjs` prend des captures avec `--screenshot`, ou exécute un
+script de contrôle avec `--script`.
+
+### Les commandes
+
 ```
 bash src/verif.sh              # 30 contrôles, sans réseau
 php src/build.php              # génère depuis le Sheet
