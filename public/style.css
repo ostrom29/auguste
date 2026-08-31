@@ -284,6 +284,47 @@ h3 {
   color: var(--encre-douce);
 }
 
+/* ------------------------------------------------------------- Bandeau */
+
+/* Il tient la place qu'occuperait une photo de la salle, et donne à la page
+   le bloc horizontal dont elle a besoin pour ne pas être une simple colonne.
+   Crème soutenu plutôt que bordeaux : le pied porte déjà le ton foncé, deux
+   aplats sombres alourdiraient. */
+.bandeau {
+  margin: 0 0 3rem;
+  padding: 2.2rem var(--marge);
+  background: var(--creme-fonce);
+  border-top: 1px solid var(--filet);
+  border-bottom: 1px solid var(--filet);
+  text-align: center;
+}
+
+.bandeau__prix {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--rouge);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.bandeau__service {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+@media (min-width: 46rem) {
+  .bandeau {
+    padding: 3rem var(--marge);
+  }
+
+  .bandeau__prix {
+    font-size: 2rem;
+  }
+}
+
 /* --------------------------------------------------------------- Ornement */
 
 /* La volute du logo, réutilisée seule pour séparer les grandes sections. */
@@ -367,8 +408,19 @@ section {
   color: var(--encre-douce);
 }
 
+/* Les boutons prennent la même largeur : côte à côte quand la place le
+   permet, empilés sinon, mais jamais de tailles différentes — deux boutons
+   inégaux donnent une page bancale. */
 .coordonnees__appel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
   margin: 1.4rem 0 0;
+}
+
+.coordonnees__appel .bouton {
+  min-width: 15rem;
 }
 
 .bouton {

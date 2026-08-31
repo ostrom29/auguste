@@ -124,7 +124,8 @@ function rendre_accueil(array $vedettes, array $infos, array $categories, string
         ),
         implode("\n", array_filter([
             rendre_entete($infos, 'accueil', 'index.html'),
-            rendre_banniere($infos),
+            // La photo si elle existe, le bandeau de prix sinon.
+            rendre_banniere($infos) ?: rendre_bandeau($infos, $categories),
             '  <main id="contenu">',
             rendre_aujourdhui($infos),
             rendre_message($infos),
@@ -337,12 +338,90 @@ function rendre_entete(array $infos, string $page, string $courant = ''): string
 /**
  * @param array<string, string> $infos
  */
+/**
+ * Le bandeau qui tient la place de la photo.
+ *
+ * Une photo de la salle n'existe pas encore, et une photo de stock montrerait
+ * la brasserie de quelqu'un d'autre. À la place, ce que le restaurant a de
+ * plus convaincant et qui est déjà dans le Sheet : ses prix. Pour un bouillon,
+ * « à partir de 1,80 € » vaut mieux qu'un intérieur générique.
+ *
+ * @param array<string, string> $infos
+ * @param list<array{nom: string, plats: list<array<string, mixed>>}> $categories
+ */
+function rendre_bandeau(array $infos, array $categories): string
+{
+    if ($categories === []) {
+        return '';
+    }
+
+    $lignes = [
+        '  <aside class="bandeau">',
+        '    <p class="bandeau__prix">' . sprintf(
+            '%d plats, de %s à %s',
+            nombre_de_plats($categories),
+            e(prix_extreme($categories, 'min')),
+            e(prix_extreme($categories, 'max'))
+        ) . '</p>',
+    ];
+
+    // « Service continu » n'est pas une formule : c'est ce que disent les
+    // horaires quand la journée tient en une seule plage.
+    $continu = service_continu($infos);
+
+    if ($continu !== '') {
+        $lignes[] = '    <p class="bandeau__service">Service continu, ' . e($continu) . '</p>';
+    }
+
+    $lignes[] = '  </aside>';
+
+    return implode("\n", $lignes);
+}
+
+/**
+ * « de 11h00 à 21h00 » si la maison sert sans interruption, sinon rien.
+ *
+ * @param array<string, string> $infos
+ */
+function service_continu(array $infos): string
+{
+    $plages = [];
+
+    foreach (array_keys(JOURS_SEMAINE) as $jour) {
+        $creneaux = decouper_creneaux(info($infos, 'horaires_' . $jour));
+
+        // Deux créneaux dans la journée : il y a une coupure entre les
+        // services, la mention serait fausse.
+        if (count($creneaux) > 1) {
+            return '';
+        }
+
+        if ($creneaux !== []) {
+            $plages[] = $creneaux[0][0] . '-' . $creneaux[0][1];
+        }
+    }
+
+    // Une seule et même amplitude tous les jours ouverts, sinon on se tait
+    // plutôt que d'annoncer un horaire qui ne vaut pas pour tous.
+    if ($plages === [] || count(array_unique($plages)) !== 1) {
+        return '';
+    }
+
+    [$debut, $fin] = explode('-', $plages[0]);
+
+    return sprintf('de %s à %s', str_replace(':', 'h', $debut), str_replace(':', 'h', $fin));
+}
+
+/**
+ * @param array<string, string> $infos
+ */
 function rendre_banniere(array $infos): string
 {
     $legende = info($infos, 'legende_photo');
 
-    // Échappatoire : « photo » à « non » dans le Sheet retire la bannière.
-    if (mb_strtolower(info($infos, 'photo', 'oui'), 'UTF-8') === 'non') {
+    // La photo ne s'affiche que si on l'a explicitement demandée : tant qu'il
+    // n'y a pas de vraie image du lieu, le bandeau tient la place.
+    if (mb_strtolower(info($infos, 'photo', 'non'), 'UTF-8') !== 'oui') {
         return '';
     }
 

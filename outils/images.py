@@ -33,6 +33,9 @@ SORTIE = RACINE / "public" / "img"
 # Un SVG, ou un PNG à canal alpha d'origine, rendrait tout ceci inutile.
 LOGO_ROUGE = "#A01E23"
 
+# Le fond de la page, pour composer l'image de partage dessus.
+CREME = "#FBF7F0"
+
 # Ce qui est plus clair que le haut de la plage devient transparent, ce qui est
 # plus sombre que le bas devient opaque.
 #
@@ -152,37 +155,26 @@ def preparer_ornement(source: Path) -> None:
     masque.unlink()
 
 
-def preparer_partage(photo: Path, logo: Path) -> None:
+def preparer_partage() -> None:
     """L'image que WhatsApp, Facebook et Slack affichent avec le lien.
 
-    1200x630 est le format attendu partout. On recadre la photo à ces
-    proportions, on l'assombrit un peu, et on pose le logo dessus — en blanc,
-    pour qu'il tienne sur une photo sombre.
+    1200x630 est le format attendu partout. Tant qu'il n'existe pas de photo
+    du lieu, c'est l'enseigne sur le crème de la page : sobre, juste, et qui
+    ne montre pas la salle de quelqu'un d'autre.
     """
     cible = SORTIE / "partage.jpg"
-    blanc = SORTIE / "_logo-blanc.png"
-
-    # Le logo est rouge sur transparent : sur une photo, il faut du blanc.
-    executer([
-        "convert", str(logo),
-        "-fill", "white", "-colorize", "100",
-        "-resize", "560x",
-        str(blanc),
-    ])
 
     executer([
-        "convert", str(photo),
-        "-resize", "1200x630^",
-        "-gravity", "center",
-        "-extent", "1200x630",
-        # Assombrir pour que le logo blanc se détache sans caisson.
-        "-brightness-contrast", "-18x8",
-        str(blanc), "-gravity", "center", "-composite",
-        "-strip", "-quality", "82", "-interlace", "Plane",
+        "convert",
+        "-size", "1200x630", f"xc:{CREME}",
+        str(SORTIE / "logo-2x.png"), "-gravity", "center",
+        "-geometry", "+0-30", "-composite",
+        str(SORTIE / "ornement-2x.png"), "-gravity", "center",
+        "-geometry", "+0+220", "-composite",
+        "-strip", "-quality", "88", "-interlace", "Plane",
         str(cible),
     ])
 
-    blanc.unlink()
     print(f"  partage.jpg      1200x630   {poids(cible)}")
 
 
@@ -206,13 +198,16 @@ def main() -> None:
         print("\nOrnement")
         preparer_ornement(logo)
 
+    # La photo du lieu n'est traitée que si elle existe vraiment. Tant qu'on
+    # n'en a pas, le site s'en passe : mieux vaut pas d'image que celle d'une
+    # autre maison.
     if photo.is_file():
         print("\nPhoto de salle")
         preparer_photo(photo)
 
-    if photo.is_file() and logo.is_file():
+    if logo.is_file():
         print("\nImage de partage")
-        preparer_partage(photo, logo)
+        preparer_partage()
 
     total = sum(f.stat().st_size for f in SORTIE.iterdir() if f.is_file())
     print(f"\n{len(list(SORTIE.iterdir()))} fichiers, {total / 1024:.0f} Ko au total dans public/img/")
