@@ -47,14 +47,16 @@ LOGO_PLAGE = "30%,50%"
 # Largeurs et proportion de la bannière. Doivent rester d'accord avec
 # SALLE_LARGEURS et SALLE_RATIO dans src/lib/rendu.php.
 SALLE_LARGEURS = (420, 720, 1040)
-SALLE_RATIO = 1.5  # 3:2
 
-# Quelle part du surplus de hauteur on retire par le haut. À 0,5 le cadrage
-# serait centré ; à 0,27 il remonte, ce qui garde les suspensions et la
-# hauteur sous plafond — c'est ce qui donne son caractère à la salle — et
-# rogne le sol, qui n'apporte rien passé la moitié du cadre.
+# 2:1. La salle est tout en longueur : un cadre allongé l'épouse, alors qu'un
+# 3:2 empilait beaucoup de sol et repoussait le contenu vers le bas. Un 21:9,
+# essayé aussi, coupait les suspensions et réduisait la scène à une tranche.
+SALLE_RATIO = 2.0
+
+# Quelle part du surplus de hauteur on retire par le haut. On garde les
+# globes et la banquette, on rogne le sol, qui n'apporte rien.
 # Exprimé en proportion et non en pixels, pour tenir avec une autre photo.
-SALLE_CADRAGE = 0.27
+SALLE_CADRAGE = 0.45
 
 
 def executer(arguments: list[str]) -> None:

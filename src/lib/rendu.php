@@ -119,12 +119,14 @@ function info(array $infos, string $cle, string $defaut = ''): string
 /**
  * La photo d'ambiance, dans ses trois largeurs préparées par outils/images.py.
  *
- * Recadrée en 3:2 quelle que soit la source : une image presque carrée en
- * pleine largeur ferait un bloc qui repousse tout le contenu sous la ligne
- * de flottaison.
+ * Recadrée en 2:1 quelle que soit la source. La salle est tout en longueur,
+ * un cadre allongé l'épouse — et une image presque carrée en pleine largeur
+ * ferait un bloc qui repousse tout le contenu sous la ligne de flottaison.
+ *
+ * Doit rester d'accord avec SALLE_RATIO dans outils/images.py.
  */
 const SALLE_LARGEURS = [420, 720, 1040];
-const SALLE_RATIO = 1.5;
+const SALLE_RATIO = 2.0;
 
 // ---------------------------------------------------------------------------
 // Les deux pages
@@ -547,7 +549,9 @@ function rendre_aujourdhui(array $infos): string
         // il n'apparaît que dans le pied de page, où toute la semaine est là.
         $lignes[] = sprintf(
             '      <span class="aujourdhui__jour" data-jour="%s">'
-            . '<span class="aujourdhui__etiquette">Aujourd’hui</span>'
+            // L'espace entre les deux balises n'est pas décorative : sans
+            // elle, un lecteur d'écran annonce « Aujourd’hui11h00 ».
+            . '<span class="aujourdhui__etiquette">Aujourd’hui</span> '
             . '<b class="aujourdhui__horaire%s">%s</b></span>',
             e($cle),
             $ferme ? ' aujourdhui__horaire--ferme' : '',

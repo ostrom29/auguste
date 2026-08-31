@@ -243,8 +243,10 @@ h3 {
 }
 
 .menu__lien {
-  padding: 0.15rem 0;
-  border-bottom: 2px solid transparent;
+  /* Le soulignement est posé bas et fin : un trait de 2 px collé au texte
+     ressemblait à un souligné de navigateur, pas à un repère typographique. */
+  padding: 0.15rem 0 0.4rem;
+  border-bottom: 1px solid transparent;
   color: var(--encre);
   /* Une navigation principale ne peut pas être plus petite que le texte
      courant : elle l'était de moitié. */
@@ -258,13 +260,14 @@ h3 {
 .menu__lien:hover,
 .menu__lien:focus {
   color: var(--rouge);
-  border-bottom-color: var(--filet);
+  border-bottom-color: var(--filet-champ);
 }
 
 /* La page où l'on se trouve, marquée sans être cliquable pour rien. */
 .menu__lien--actuel {
   color: var(--rouge);
   border-bottom-color: var(--rouge);
+  font-weight: 600;
 }
 
 /* Sous 416 px — la majorité des téléphones — on resserre l'interlettrage et
@@ -537,28 +540,35 @@ section {
   transform: translateY(-0.3em);
 }
 
+/* Le nom domine, la description suit, les allergènes s'effacent.
+   Auparavant la description était la plus grosse des trois : elle pesait
+   autant que le plat qu'elle décrit, et seule la graisse les distinguait. */
 .plat__nom {
-  font-size: 1.0625rem;
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
 .plat__prix {
   order: 2;
   margin: 0;
+  /* Même corps que le nom : ils forment une paire, ils se répondent. */
+  font-size: 1.15rem;
   white-space: nowrap; /* « 12,90 € » ne doit jamais être coupé */
   color: var(--rouge);
 }
 
 .plat__description {
-  margin: 0.15rem 0 0;
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
   color: var(--encre-douce);
 }
 
 .plat__allergenes {
-  margin: 0.25rem 0 0;
-  font-size: 0.82rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
   font-style: italic;
   color: var(--encre-douce);
+  opacity: 0.85;
 }
 
 .vedettes__lien {
@@ -760,6 +770,14 @@ section {
   margin: 0 0 1.2rem;
 }
 
+/* Un champ « nom » large de 700 px est absurde : personne n'écrit un nom sur
+   soixante-dix caractères, et un champ démesuré fait douter de ce qu'on
+   attend. Le message, lui, garde toute la colonne. */
+.formulaire__champ input,
+.formulaire select {
+  max-width: 26rem;
+}
+
 .formulaire label {
   display: block;
   margin-bottom: 0.4rem;
@@ -890,9 +908,11 @@ section {
     padding-bottom: 0;
   }
 
-  /* Grand écran : le menu peut respirer sans risquer de se replier. */
+  /* Grand écran : le menu respire, mais pas au point de se disperser.
+     Trois mots trop écartés au milieu d'une large bande ne se lisent plus
+     comme un groupe. */
   .menu {
-    gap: 0.4rem 2.4rem;
+    gap: 0.4rem 2rem;
     padding: 1.1rem var(--marge);
   }
 
@@ -900,8 +920,9 @@ section {
     letter-spacing: 0.14em;
   }
 
-  .plat__nom {
-    font-size: 1.15rem;
+  .plat__nom,
+  .plat__prix {
+    font-size: 1.3rem;
   }
 
   .categorie {
