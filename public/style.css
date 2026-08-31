@@ -120,6 +120,20 @@ a:focus {
   outline-offset: 3px;
 }
 
+/* Présent pour la structure du document et les lecteurs d'écran, absent de
+   l'affichage. À ne pas confondre avec display:none, qui le retirerait aussi
+   aux lecteurs d'écran. */
+.hors-ecran {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Lien d'évitement : hors de l'écran, il revient au premier coup de tabulation. */
 .evitement {
   position: absolute;
@@ -236,10 +250,12 @@ h3 {
   /* Marges latérales réduites : c'est une bande, pas du texte à justifier.
      Les vingt pixels récupérés de chaque côté sont ce qui manquait aux trois
      entrées pour tenir sur une ligne à 390 px. */
-  padding: 1.1rem 0.6rem;
-  /* Un seul filet, au-dessus. Deux en faisaient une frise de séparation dans
-     laquelle du texte semblait s'être égaré, au lieu d'une navigation. */
-  border-top: 1px solid var(--filet);
+  padding: 1rem 0.6rem;
+  /* Un aplat plutôt qu'un filet. Posé sur le crème, entre une enseigne rouge
+     et une photo, le menu se fondait : trois mots gris entre deux blocs
+     forts. Le bordeaux lui donne un sol à lui, et répond à celui du pied —
+     la page gagne deux serre-livres au lieu d'un. */
+  background: var(--bordeaux);
 }
 
 .menu__lien {
@@ -247,7 +263,7 @@ h3 {
      ressemblait à un souligné de navigateur, pas à un repère typographique. */
   padding: 0.15rem 0 0.4rem;
   border-bottom: 1px solid transparent;
-  color: var(--encre);
+  color: rgba(251, 247, 240, 0.85);
   /* Une navigation principale ne peut pas être plus petite que le texte
      courant : elle l'était de moitié. */
   font-size: 0.95rem;
@@ -259,15 +275,20 @@ h3 {
 
 .menu__lien:hover,
 .menu__lien:focus {
-  color: var(--rouge);
-  border-bottom-color: var(--filet-champ);
+  color: #fff;
+  border-bottom-color: rgba(251, 247, 240, 0.5);
 }
 
 /* La page où l'on se trouve, marquée sans être cliquable pour rien. */
 .menu__lien--actuel {
-  color: var(--rouge);
-  border-bottom-color: var(--rouge);
+  color: #fff;
+  border-bottom-color: #fff;
   font-weight: 600;
+}
+
+/* Le contour de focus doit se voir sur le bordeaux, pas sur le crème. */
+.menu__lien:focus-visible {
+  outline-color: #fff;
 }
 
 /* Sous 416 px — la majorité des téléphones — on resserre l'interlettrage et

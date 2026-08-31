@@ -358,10 +358,11 @@ function rendre_entete(array $infos, string $page, string $courant = ''): string
         rendre_menu($infos, $courant),
     ];
 
-    // Sur la carte, le titre appartient à l'en-tête. Sur une page de texte, il
-    // appartient au contenu : l'en-tête n'est alors qu'un repère.
+    // Sur la carte, le titre visible ferait doublon avec l'entrée de menu
+    // déjà soulignée en rouge juste au-dessus. Il reste dans le document,
+    // pour la structure et les lecteurs d'écran, mais hors de l'écran.
     if ($page === 'carte') {
-        $lignes[] = '    <h1 class="entete__titre">La carte</h1>';
+        $lignes[] = '    <h1 class="hors-ecran">La carte</h1>';
     }
 
     $lignes[] = '  </header>';

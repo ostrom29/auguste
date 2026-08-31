@@ -76,6 +76,9 @@ def main() -> None:
         ("bouton survolé", c["creme"], c["rouge-sombre"], 4.5),
         # La bordure d'un champ est un élément d'interface, pas un décor.
         ("bordure de champ", c["filet-champ"], c["creme"], 3.0),
+        # Le menu est posé sur un aplat bordeaux, comme le pied.
+        ("menu (85 %) sur bordeaux", sur(c["creme"], c["bordeaux"], 0.85), c["bordeaux"], 4.5),
+        ("menu, page courante", (255, 255, 255), c["bordeaux"], 4.5),
     ]
 
     echecs = 0
