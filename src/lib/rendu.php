@@ -119,14 +119,14 @@ function info(array $infos, string $cle, string $defaut = ''): string
 /**
  * La photo d'ambiance, dans ses trois largeurs préparées par outils/images.py.
  *
- * Recadrée en 2:1 quelle que soit la source. La salle est tout en longueur,
+ * Recadrée en 21:9 quelle que soit la source. La salle est tout en longueur,
  * un cadre allongé l'épouse — et une image presque carrée en pleine largeur
  * ferait un bloc qui repousse tout le contenu sous la ligne de flottaison.
  *
  * Doit rester d'accord avec SALLE_RATIO dans outils/images.py.
  */
 const SALLE_LARGEURS = [420, 720, 1040];
-const SALLE_RATIO = 2.0;
+const SALLE_RATIO = 2.333;
 
 // ---------------------------------------------------------------------------
 // Les deux pages
@@ -636,6 +636,17 @@ function rendre_coordonnees(array $infos): string
 
     if ($actions !== []) {
         $bloc[] = '      <p class="coordonnees__appel">' . implode("\n        ", $actions) . '</p>';
+    }
+
+    // Instagram est là que vivent les photos d'un restaurant : le reléguer au
+    // pied de page en faisait une mention de service. Il devient une
+    // invitation, à côté des actions, sans concurrencer le bouton d'appel.
+    $instagram = lien_externe($infos, 'instagram');
+
+    if ($instagram !== '') {
+        $bloc[] = '      <p class="coordonnees__instagram">'
+            . '<a href="' . e($instagram) . '" target="_blank" rel="noopener me">'
+            . 'Voir nos photos sur Instagram</a></p>';
     }
 
     $bloc[] = '    </section>';

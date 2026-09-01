@@ -243,13 +243,16 @@ h3 {
      dès 390 px de large. Elles respirent davantage sur grand écran. */
   gap: 0.4rem 1.2rem;
   justify-content: center;
-  max-width: var(--page);
-  /* De l'air sous le logo, qui est recadré au plus près de son dessin, et
-     sous le menu, sinon il colle au haut de la photo. */
-  /* L'air en dessous n'est pas de l'agrément : sans elle, le bandeau touchait
-     la photo et les deux se lisaient comme un seul bloc. Le menu se faisait
+  /* Pleine largeur. Il s'arrêtait à la largeur de la photo pour s'aligner sur
+     elle ; depuis qu'un espace les sépare, cet alignement ne veut plus rien
+     dire, et un bandeau qui s'arrête en chemin fait inachevé.
+
+     L'air en dessous n'est pas de l'agrément : sans lui, le bandeau touchait
+     la photo et les deux se lisaient comme un seul bloc — le menu se faisait
      absorber par l'image au lieu d'appartenir à l'en-tête. */
-  margin: 2.2rem auto 2.5rem;
+  /* Les marges négatives annulent le rembourrage de l'en-tête : sans elles,
+     le bandeau s'arrêtait vingt pixels avant le bord de chaque côté. */
+  margin: 2.2rem calc(-1 * var(--marge)) 2.5rem;
   /* Marges latérales réduites : c'est une bande, pas du texte à justifier.
      Les vingt pixels récupérés de chaque côté sont ce qui manquait aux trois
      entrées pour tenir sur une ligne à 390 px. */
@@ -502,6 +505,17 @@ section {
 
 .coordonnees__appel .bouton {
   min-width: 15rem;
+}
+
+/* Un lien, pas un troisième bouton : trois boutons de même poids feraient
+   perdre au téléphone sa primauté, alors que c'est l'action principale. */
+.coordonnees__instagram {
+  margin: 1.1rem 0 0;
+  font-size: 0.95rem;
+}
+
+.coordonnees__instagram a {
+  text-underline-offset: 0.3em;
 }
 
 .bouton {
