@@ -40,14 +40,18 @@
 /* ------------------------------------------------------------------ Réglages */
 
 :root {
-  --creme: #fbf7f0;
-  --creme-fonce: #f3ebdd;
+  /* Un crème qui se voit. À #fbf7f0 il se lisait comme du blanc ordinaire à
+     côté du plafond blanc de la photo : la page n'avait pas de teinte à elle.
+     Plus chaud vire au papier jauni et obligerait à retoucher tous les aplats. */
+  --creme: #faf5e9;
+  --creme-fonce: #f2e9d6;
   --rouge: #a01e23;
   --rouge-sombre: #7d1519;
-  /* Le bordeaux des banquettes : il ne sert qu'à poser le pied de page, pour
-     que la page ait une base au lieu de s'arrêter. Ce n'est pas une seconde
-     couleur d'accent — il n'apparaît nulle part ailleurs. */
-  --bordeaux: #55151a;
+  /* Le bordeaux des banquettes, qui porte le bandeau du menu et le pied de
+     page. Plus sombre, il tirait vers le brun-noir et perdait le lien avec le
+     rouge de l'enseigne ; celui-ci garde la profondeur avec plus de rouge
+     dedans. Ce n'est pas une seconde couleur d'accent. */
+  --bordeaux: #6d1a20;
   --encre: #2a2320;
   --encre-douce: #6e625a;
 
@@ -57,9 +61,11 @@
      et les éléments décoratifs n'ont pas de seuil de contraste.
      --filet-champ borde ce qui se clique et se remplit. WCAG demande 3:1
      pour la limite visible d'un élément interactif : c'est la teinte la plus
-     claire qui l'atteigne (3,05:1), calculée, pas choisie à l'œil. */
-  --filet: #e0d5c4;
-  --filet-champ: #a18b70;
+     claire qui l'atteigne, calculée et non choisie à l'oeil. Elle a été
+     recalculée quand le crème a été réchauffé : l'ancienne teinte tombait
+     alors à 2,996:1, sous le seuil au millième près. */
+  --filet: #ded2be;
+  --filet-champ: #9d876c;
 
   --serif: 'EB Garamond', 'Iowan Old Style', Palatino, 'Palatino Linotype',
     Georgia, serif;
@@ -495,16 +501,35 @@ section {
 /* Les boutons prennent la même largeur : côte à côte quand la place le
    permet, empilés sinon, mais jamais de tailles différentes — deux boutons
    inégaux donnent une page bancale. */
+/* Une grille, pas du flex : avec flex-basis à 100 %, une largeur maximale
+   plafonne l'élément, la ligne garde de la place et le bouton suivant s'y
+   glisse. La grille, elle, tient la ligne.
+
+   Sur petit écran les trois s'empilent ; au-delà, l'appel prend sa ligne et
+   les deux autres se partagent la suivante. Il y a une action principale et
+   deux secondaires, la mise en page doit le dire. */
 .coordonnees__appel {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   justify-content: center;
   gap: 0.8rem;
   margin: 1.4rem 0 0;
 }
 
 .coordonnees__appel .bouton {
-  min-width: 15rem;
+  min-width: 13rem;
+  width: 100%;
+  max-width: 22rem;
+  justify-self: center;
+}
+
+@media (min-width: 32rem) {
+  .coordonnees__appel {
+    grid-template-columns: repeat(2, minmax(0, 13rem));
+  }
+
+  .coordonnees__appel .bouton:not(.bouton--discret) {
+    grid-column: 1 / -1;
+  }
 }
 
 
@@ -514,7 +539,10 @@ section {
   border: 1px solid var(--rouge);
   background: var(--rouge);
   color: var(--creme);
-  font-size: 1rem;
+  /* Un bouton n'est pas du texte secondaire : c'est l'action. À 1 rem il
+     était plus petit que le corps du texte, et son libellé paraissait timide
+     dans un cadre trop grand pour lui. */
+  font-size: 1.1rem;
   letter-spacing: 0.06em;
   text-decoration: none;
 }
