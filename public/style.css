@@ -507,25 +507,6 @@ section {
   min-width: 15rem;
 }
 
-/* Le pseudo, pas un troisième bouton : trois boutons de même poids feraient
-   perdre au téléphone sa primauté. Il se voit par sa taille et sa couleur,
-   pas par un cadre. */
-.coordonnees__instagram {
-  margin: 1.3rem 0 0;
-}
-
-.instagram {
-  font-size: 1.1rem;
-  letter-spacing: 0.02em;
-  text-decoration: none;
-  border-bottom: 1px solid var(--filet-champ);
-  padding-bottom: 0.15rem;
-}
-
-.instagram:hover,
-.instagram:focus {
-  border-bottom-color: var(--rouge);
-}
 
 .bouton {
   display: inline-block;

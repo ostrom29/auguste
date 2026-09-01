@@ -48,15 +48,14 @@ LOGO_PLAGE = "30%,50%"
 # SALLE_LARGEURS et SALLE_RATIO dans src/lib/rendu.php.
 SALLE_LARGEURS = (420, 720, 1040)
 
-# 3:1. La salle est tout en longueur : un cadre très allongé l'épouse, et ni
-# le plafond ni le sol n'apportent rien. Le cadre garde la bande utile —
-# banquette, tables, comptoir, barman. Au-delà, en 3,5:1, la tête du barman
-# touche le bord et la scène est à l'étroit.
-SALLE_RATIO = 3.0
+# 5:1. Ni le plafond ni le sol n'apportent quoi que ce soit : le cadre ne
+# garde que la bande utile — banquette, tables, comptoir, barman. C'est la
+# limite, car en 6:1 la tête du barman est coupée.
+SALLE_RATIO = 5.0
 
 # Quelle part du surplus de hauteur on retire par le haut.
 # Exprimé en proportion et non en pixels, pour tenir avec une autre photo.
-SALLE_CADRAGE = 0.36
+SALLE_CADRAGE = 0.38
 
 
 def executer(arguments: list[str]) -> None:
