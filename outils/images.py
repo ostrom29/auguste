@@ -48,10 +48,10 @@ LOGO_PLAGE = "30%,50%"
 # SALLE_LARGEURS et SALLE_RATIO dans src/lib/rendu.php.
 SALLE_LARGEURS = (420, 720, 1040)
 
-# 5:1. Ni le plafond ni le sol n'apportent quoi que ce soit : le cadre ne
-# garde que la bande utile — banquette, tables, comptoir, barman. C'est la
-# limite, car en 6:1 la tête du barman est coupée.
-SALLE_RATIO = 5.0
+# 21:9. Assez allongé pour épouser la longueur de la salle sans la réduire
+# à une tranche : au-delà de 3:1 l'image devient une bande trop mince sur
+# un écran de téléphone, et en 6:1 la tête du barman est coupée.
+SALLE_RATIO = 2.333
 
 # Quelle part du surplus de hauteur on retire par le haut.
 # Exprimé en proportion et non en pixels, pour tenir avec une autre photo.
@@ -113,7 +113,7 @@ def dimensions(chemin: Path) -> tuple[int, int]:
 
 
 def preparer_photo(source: Path) -> None:
-    """Sort la photo en WebP et en JPEG, à trois largeurs, recadrée en 3:2."""
+    """Sort la photo en WebP et en JPEG, à trois largeurs, recadrée en 21:9."""
     source_l, source_h = dimensions(source)
 
     for largeur in SALLE_LARGEURS:
