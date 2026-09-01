@@ -119,14 +119,14 @@ function info(array $infos, string $cle, string $defaut = ''): string
 /**
  * La photo d'ambiance, dans ses trois largeurs préparées par outils/images.py.
  *
- * Recadrée en 21:9 quelle que soit la source. La salle est tout en longueur,
+ * Recadrée en 3:1 quelle que soit la source. La salle est tout en longueur,
  * un cadre allongé l'épouse — et une image presque carrée en pleine largeur
  * ferait un bloc qui repousse tout le contenu sous la ligne de flottaison.
  *
  * Doit rester d'accord avec SALLE_RATIO dans outils/images.py.
  */
 const SALLE_LARGEURS = [420, 720, 1040];
-const SALLE_RATIO = 2.333;
+const SALLE_RATIO = 3.0;
 
 // ---------------------------------------------------------------------------
 // Les deux pages
@@ -568,6 +568,24 @@ function rendre_aujourdhui(array $infos): string
 }
 
 /**
+ * « https://instagram.com/chezauguste_?igsi=… » → « @chezauguste_ ».
+ *
+ * Le pseudo se reconnaît d'un coup d'oeil et se retape ailleurs ; une formule
+ * comme « voir nos photos » ne se retient pas. À défaut de pseudo lisible
+ * dans l'adresse, on retombe sur le nom du réseau.
+ */
+function pseudo_instagram(string $url): string
+{
+    $chemin = trim((string) parse_url($url, PHP_URL_PATH), '/');
+
+    // On ne garde que le premier segment : /chezauguste_/reels donnerait
+    // autrement un faux pseudo.
+    $pseudo = explode('/', $chemin)[0];
+
+    return $pseudo === '' ? 'Instagram' : '@' . $pseudo;
+}
+
+/**
  * Le message du Sheet — fermeture annuelle, jour férié. Rien s'il est vide.
  *
  * @param array<string, string> $infos
@@ -639,14 +657,15 @@ function rendre_coordonnees(array $infos): string
     }
 
     // Instagram est là que vivent les photos d'un restaurant : le reléguer au
-    // pied de page en faisait une mention de service. Il devient une
-    // invitation, à côté des actions, sans concurrencer le bouton d'appel.
+    // pied de page en faisait une mention de service. Il monte auprès des
+    // actions, et porte le pseudo plutôt qu'une formule — c'est le pseudo
+    // qu'on cherche, et il se reconnaît d'un coup d'oeil.
     $instagram = lien_externe($infos, 'instagram');
 
     if ($instagram !== '') {
         $bloc[] = '      <p class="coordonnees__instagram">'
-            . '<a href="' . e($instagram) . '" target="_blank" rel="noopener me">'
-            . 'Voir nos photos sur Instagram</a></p>';
+            . '<a class="instagram" href="' . e($instagram) . '" target="_blank" rel="noopener me">'
+            . e(pseudo_instagram($instagram)) . '</a></p>';
     }
 
     $bloc[] = '    </section>';
@@ -754,28 +773,9 @@ function rendre_pied(array $infos): string
             . e(lien_telephone($telephone)) . '">' . e($telephone) . '</a></p>';
     }
 
-    $reseaux = [
-        'instagram' => 'Instagram',
-        'facebook' => 'Facebook',
-    ];
-
-    $liens = [];
-
-    foreach ($reseaux as $cle => $libelle) {
-        $url = lien_externe($infos, $cle);
-
-        if ($url !== '') {
-            $liens[] = '      <a href="' . e($url) . '" target="_blank" rel="noopener me">'
-                . e($libelle) . '</a>';
-        }
-    }
-
-    if ($liens !== []) {
-        $lignes[] = '    <nav class="pied__reseaux" aria-label="Réseaux sociaux">';
-        array_push($lignes, ...$liens);
-        $lignes[] = '    </nav>';
-    }
-
+    // Les réseaux ne sont plus repris ici : ils figurent auprès des
+    // coordonnées, où ils se voient. Les répéter en bas ferait doublon.
+    //
     // Le menu principal couvre déjà les pages du site : le pied ne reprend
     // que ce qui n'a pas sa place en haut.
     $lignes[] = '    <nav class="pied__liens" aria-label="Informations légales">';

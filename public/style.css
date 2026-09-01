@@ -507,15 +507,24 @@ section {
   min-width: 15rem;
 }
 
-/* Un lien, pas un troisième bouton : trois boutons de même poids feraient
-   perdre au téléphone sa primauté, alors que c'est l'action principale. */
+/* Le pseudo, pas un troisième bouton : trois boutons de même poids feraient
+   perdre au téléphone sa primauté. Il se voit par sa taille et sa couleur,
+   pas par un cadre. */
 .coordonnees__instagram {
-  margin: 1.1rem 0 0;
-  font-size: 0.95rem;
+  margin: 1.3rem 0 0;
 }
 
-.coordonnees__instagram a {
-  text-underline-offset: 0.3em;
+.instagram {
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border-bottom: 1px solid var(--filet-champ);
+  padding-bottom: 0.15rem;
+}
+
+.instagram:hover,
+.instagram:focus {
+  border-bottom-color: var(--rouge);
 }
 
 .bouton {
@@ -698,20 +707,6 @@ section {
 .pied__telephone {
   margin: 2rem 0 0;
   text-align: center;
-}
-
-.pied__reseaux {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.6rem;
-  justify-content: center;
-  margin-top: 2.2rem;
-}
-
-.pied__reseaux a {
-  font-size: 0.9rem;
-  letter-spacing: 0.06em;
-  text-underline-offset: 0.25em;
 }
 
 .pied__liens {
@@ -1008,7 +1003,6 @@ section {
   .ornement,
   .aujourdhui,
   .pied__liens,
-  .pied__reseaux,
   .vedettes__lien,
   .entete__accroche {
     display: none;
