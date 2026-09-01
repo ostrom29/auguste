@@ -37,7 +37,9 @@ function metadonnees(array $infos, string $fichier, string $titre, string $descr
     }
 
     $url = $urlSite . '/' . ($fichier === 'index.html' ? '' : $fichier);
-    $image = $urlSite . '/' . PARTAGE_IMAGE;
+    // Empreinte comprise : les réseaux gardent l'aperçu en cache eux aussi,
+    // et une image de partage changée doit se voir.
+    $image = $urlSite . '/' . ressource(PARTAGE_IMAGE);
     $nom = info($infos, 'nom', NOM_PAR_DEFAUT);
 
     return array_merge($balises, [

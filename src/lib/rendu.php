@@ -97,6 +97,16 @@ function calculer_empreintes(string $dossier): array
         $registre[$fichier] = is_file($chemin) ? substr(md5_file($chemin) ?: '', 0, 8) : '';
     }
 
+    // Les images aussi, et pour une raison plus sévère encore que la feuille
+    // de style : le .htaccess les met en cache six mois. Sans empreinte, une
+    // photo recadrée ne serait vue par un visiteur déjà venu qu'à l'expiration
+    // du cache — soit dans six mois.
+    foreach (glob($dossier . '/img/*') ?: [] as $chemin) {
+        if (is_file($chemin)) {
+            $registre['img/' . basename($chemin)] = substr(md5_file($chemin) ?: '', 0, 8);
+        }
+    }
+
     return $registre;
 }
 
@@ -239,7 +249,7 @@ function document(string $classe, string $titre, array $tete, string $corps): st
         '  <title>' . $titre . '</title>',
         implode("\n", $tete),
         '  <link rel="stylesheet" href="' . e(ressource('style.css')) . '">',
-        '  <link rel="icon" href="img/favicon.png" type="image/png">',
+        '  <link rel="icon" href="' . e(ressource('img/favicon.png')) . '" type="image/png">',
         '</head>',
         '<body class="page page--' . $classe . '">',
         '  <!-- Page générée par src/build.php : toute modification à la main sera écrasée. -->',
@@ -338,8 +348,9 @@ function rendre_entete(array $infos, string $page, string $courant = ''): string
 
     // Sur l'accueil le logo est le titre de la page ; sur la carte, il n'est
     // qu'un lien de retour, et le titre revient à la carte elle-même.
-    $logo = '<img class="entete__logo" src="img/logo.png" alt="' . e($nom) . '"'
-        . ' width="440" height="322" srcset="img/logo.png 440w, img/logo-2x.png 880w"'
+    $logo = '<img class="entete__logo" src="' . e(ressource('img/logo.png')) . '" alt="' . e($nom) . '"'
+        . ' width="440" height="322" srcset="' . e(ressource('img/logo.png')) . ' 440w, '
+        . e(ressource('img/logo-2x.png')) . ' 880w"'
         . ' sizes="(min-width: 40rem) 20rem, 60vw">';
 
     if ($page === 'accueil') {
@@ -468,8 +479,8 @@ function rendre_banniere(array $infos): string
     $jpeg = [];
 
     foreach (SALLE_LARGEURS as $largeur) {
-        $webp[] = sprintf('img/salle-%1$d.webp %1$dw', $largeur);
-        $jpeg[] = sprintf('img/salle-%1$d.jpg %1$dw', $largeur);
+        $webp[] = e(ressource(sprintf('img/salle-%d.webp', $largeur))) . ' ' . $largeur . 'w';
+        $jpeg[] = e(ressource(sprintf('img/salle-%d.jpg', $largeur))) . ' ' . $largeur . 'w';
     }
 
     $tailles = '(min-width: 60rem) 58rem, 100vw';
@@ -481,7 +492,8 @@ function rendre_banniere(array $infos): string
         '    <picture>',
         '      <source type="image/webp" srcset="' . implode(', ', $webp) . '" sizes="' . $tailles . '">',
         // width et height évitent que la page saute quand l'image arrive.
-        '      <img src="img/salle-' . $pleine . '.jpg" srcset="' . implode(', ', $jpeg) . '"'
+        '      <img src="' . e(ressource('img/salle-' . $pleine . '.jpg'))
+            . '" srcset="' . implode(', ', $jpeg) . '"'
             . ' sizes="' . $tailles . '" width="' . $pleine . '" height="' . $hauteur . '"'
             . ' alt="' . e($legende !== '' ? $legende : 'La salle du restaurant') . '" decoding="async">',
         '    </picture>',
@@ -524,8 +536,9 @@ function lien_externe(array $infos, string $cle): string
  */
 function rendre_ornement(): string
 {
-    return '    <img class="ornement" src="img/ornement.png"'
-        . ' srcset="img/ornement.png 420w, img/ornement-2x.png 840w"'
+    return '    <img class="ornement" src="' . e(ressource('img/ornement.png')) . '"'
+        . ' srcset="' . e(ressource('img/ornement.png')) . ' 420w, '
+        . e(ressource('img/ornement-2x.png')) . ' 840w"'
         . ' width="420" height="52" alt="" aria-hidden="true" decoding="async">';
 }
 

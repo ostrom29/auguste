@@ -150,6 +150,18 @@ else
   rouge "le JSON-LD et le site se contredisent sur la réservation"
 fi
 
+# Le .htaccess met les images en cache six mois. Une seule URL sans empreinte
+# et le visiteur déjà venu garde l'ancienne image jusqu'à l'expiration.
+sans_empreinte=$(grep -ohE '(src|href)="[^"]*img/[^"]*"' public/*.html \
+  | grep -v '?v=' | sort -u)
+
+if [ -z "$sans_empreinte" ]; then
+  vert "toutes les images portent une empreinte de cache"
+else
+  rouge "des images sans empreinte, invisibles six mois après un changement"
+  echo "$sans_empreinte" | sed 's/^/       /'
+fi
+
 echo
 echo "Contrastes"
 # Variable distincte : $sortie est le fichier temporaire du script.
