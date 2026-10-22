@@ -97,6 +97,12 @@ function generer(string $source, string $racine): array
             'robots.txt' => rendre_robots($url),
         ];
 
+        // Raccourci de réservation : chezauguste.com/r, assez court pour être
+        // dicté au téléphone ou imprimé sur une carte de visite.
+        if (reservation_active($infos)) {
+            $pages['r/index.php'] = rendre_raccourci(lien_reservation($infos));
+        }
+
         foreach ($pages as $fichier => $contenu) {
             $resultat['octets'] += ecrire($dossier . '/' . $fichier, $contenu);
             $resultat['pages'][] = $fichier;

@@ -200,6 +200,50 @@ function rendre_404(array $infos): string
 }
 
 /**
+ * Un raccourci qui renvoie ailleurs.
+ *
+ * Écrit en PHP pour envoyer une vraie redirection HTTP plutôt qu'une
+ * actualisation dans une balise meta : c'est plus rapide, et les moteurs la
+ * comprennent. Le corps HTML ne sert qu'aux rares clients qui ne suivent pas.
+ *
+ * Redirection temporaire, jamais permanente : une 301 est mise en cache par
+ * les navigateurs pour toujours, et le jour où le restaurant change de
+ * prestataire, le raccourci mènerait encore à l'ancien.
+ *
+ * La cible vient du Sheet. lien_externe() a déjà refusé tout ce qui n'est pas
+ * http(s), ce qui écarte une injection d'en-tête par une cellule du tableur.
+ */
+function rendre_raccourci(string $cible): string
+{
+    // Une cible relative — le formulaire du site — devient absolue depuis la
+    // racine : le raccourci vit dans /r/, pas à la racine.
+    $destination = preg_match('#^https?://#i', $cible) === 1 ? $cible : '/' . ltrim($cible, '/');
+
+    return implode("\n", [
+        '<?php',
+        '',
+        '// Fichier généré par src/build.php — ne pas modifier à la main.',
+        '',
+        "header('Location: " . addslashes($destination) . "', true, 302);",
+        "header('Cache-Control: no-store');",
+        '',
+        '?>',
+        '<!DOCTYPE html>',
+        '<html lang="fr">',
+        '<head>',
+        '  <meta charset="utf-8">',
+        '  <title>Réserver</title>',
+        '  <meta name="robots" content="noindex">',
+        '</head>',
+        '<body>',
+        '  <p><a href="' . e($destination) . '">Réserver une table</a></p>',
+        '</body>',
+        '</html>',
+        '',
+    ]);
+}
+
+/**
  * Le décor partagé, écrit en PHP plutôt qu'en HTML.
  *
  * contact.php ne peut pas être pré-généré — il change selon ce que le
