@@ -4,8 +4,10 @@
 # Le début du fichier appartient à cPanel (« do not edit ») : on ajoute
 # APRÈS, sans rien retirer.
 #
-# Déposé par outils/deployer.sh, qui vérifie d'abord que le bloc n'y est pas
-# déjà. Repère du bloc : la ligne « BEGIN chez-auguste » ci-dessous.
+# Déposé par outils/deployer.sh, qui retire d'abord toute version précédente
+# puis réécrit celle-ci. Les deux lignes repères qui encadrent le bloc
+# délimitent ce qui lui appartient ; ce commentaire ne les répète pas, sinon
+# le script les confondrait avec les vraies.
 # ---------------------------------------------------------------------------
 
 # BEGIN chez-auguste

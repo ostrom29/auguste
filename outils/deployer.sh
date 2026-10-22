@@ -50,13 +50,25 @@ tar czf - -C public style.css jour.js publier.php contact.php reservation.php im
 echo "  envoyé"
 
 titre "Bloc .htaccess"
-# Idempotent : on n'ajoute que si le repère est absent, et on n'enlève jamais
-# les directives que cPanel a écrites en tête de fichier.
-if $SSH "$HOTE" "grep -q 'BEGIN chez-auguste' $DISTANT/public_html/.htaccess 2>/dev/null"; then
-  echo "  déjà présent, laissé tel quel"
+# On retire toute version précédente du bloc, puis on réécrit la nôtre.
+#
+# L'ancienne logique se contentait de ne rien faire quand le repère était là.
+# Deux défauts : une modification de nos règles n'était jamais déployée, et
+# le serveur a fini avec deux copies du bloc — la vérification a échoué une
+# fois, et rien ne l'a rattrapé.
+#
+# Les deux repères sont comparés en ligne entière, pour ne pas confondre une
+# règle avec un commentaire qui la mentionne. Le reste du fichier, écrit par
+# cPanel, n'est jamais touché.
+$SSH "$HOTE" "cp $DISTANT/public_html/.htaccess $DISTANT/public_html/.htaccess.avant 2>/dev/null; \
+  sed -i '/^# BEGIN chez-auguste\$/,/^# END chez-auguste\$/d' $DISTANT/public_html/.htaccess 2>/dev/null; \
+  cat >> $DISTANT/public_html/.htaccess" < deploiement/htaccess.txt
+
+restants=$($SSH "$HOTE" "grep -c '^# BEGIN chez-auguste\$' $DISTANT/public_html/.htaccess")
+if [ "$restants" = "1" ]; then
+  echo "  bloc unique et à jour (sauvegarde : .htaccess.avant)"
 else
-  $SSH "$HOTE" "cp $DISTANT/public_html/.htaccess $DISTANT/public_html/.htaccess.avant 2>/dev/null; cat >> $DISTANT/public_html/.htaccess" < deploiement/htaccess.txt
-  echo "  ajouté (sauvegarde : .htaccess.avant)"
+  echo "  ATTENTION : $restants blocs dans le fichier, à vérifier à la main" >&2
 fi
 
 titre "Clé url_site"
