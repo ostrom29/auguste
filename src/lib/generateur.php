@@ -97,13 +97,16 @@ function generer(string $source, string $racine): array
             'robots.txt' => rendre_robots($url),
         ];
 
-        if ($url !== '') {
-            $pages['sitemap.xml'] = rendre_sitemap($url, $infos);
-        }
-
         foreach ($pages as $fichier => $contenu) {
             $resultat['octets'] += ecrire($dossier . '/' . $fichier, $contenu);
             $resultat['pages'][] = $fichier;
+        }
+
+        // Le plan du site vient en dernier : il date chaque page de son
+        // fichier, qui vient d'être écrit ou laissé tel quel.
+        if ($url !== '') {
+            $resultat['octets'] += ecrire($dossier . '/sitemap.xml', rendre_sitemap($url, $infos, $dossier));
+            $resultat['pages'][] = 'sitemap.xml';
         }
 
         $resultat['lues'] = $carte['lues'];
@@ -119,6 +122,7 @@ function generer(string $source, string $racine): array
         $resultat['avertissements'] = array_merge(
             avertissements_infos($infos),
             avertissements_cles_inconnues($infos),
+            avertissements_reservation($infos),
             avertissements_vedettes($carte),
             avertissements_legaux($infos),
             $url === '' ? ['« url_site » n\'est pas configurée : ni balise canonique, '
@@ -136,9 +140,18 @@ function generer(string $source, string $racine): array
  * Écrit la page via un fichier temporaire renommé, dans le même dossier pour
  * que le renommage reste atomique : si l'écriture échoue en cours de route, la
  * version précédente n'est pas entamée.
+ *
+ * Une page identique n'est pas réécrite. La publication automatique régénère
+ * le site toutes les dix minutes : sans cela, chaque passage changerait la
+ * date des fichiers, les navigateurs retéléchargeraient des pages inchangées,
+ * et le plan du site annoncerait à Google une modification quotidienne.
  */
 function ecrire(string $chemin, string $html): int
 {
+    if (is_file($chemin) && file_get_contents($chemin) === $html) {
+        return strlen($html);
+    }
+
     $dossier = dirname($chemin);
 
     // Notation octale historique : 0o775 demanderait PHP 8.1, et l'hébergement
@@ -167,6 +180,10 @@ function ecrire(string $chemin, string $html): int
 
         throw new RuntimeException(sprintf('Remplacement impossible : %s', $chemin));
     }
+
+    // is_file() a mis l'ancienne date en cache : le plan du site doit lire
+    // la nouvelle.
+    clearstatcache(true, $chemin);
 
     return $octets;
 }
@@ -204,6 +221,35 @@ function avertissements_vedettes(array $carte): array
 function erreur_generale(string $message): array
 {
     return ['fichier' => null, 'numero' => null, 'message' => $message];
+}
+
+/**
+ * Le restaurateur voit deux onglets, pas deux fichiers CSV — et « ligne 12 »
+ * ne veut rien dire tant qu'on n'a pas dit dans lequel.
+ *
+ * @param list<array{fichier: string|null, numero: int|null, message: string}> $erreurs
+ * @return list<string>
+ */
+function lignes_erreurs(array $erreurs): array
+{
+    $onglets = ['carte.csv' => 'carte', 'infos.csv' => 'infos'];
+    $lignes = [];
+
+    foreach ($erreurs as $erreur) {
+        $onglet = $onglets[$erreur['fichier']] ?? null;
+
+        if ($onglet === null) {
+            $lignes[] = $erreur['message'];
+
+            continue;
+        }
+
+        $lignes[] = $erreur['numero'] === null
+            ? sprintf('onglet « %s » : %s', $onglet, $erreur['message'])
+            : sprintf('onglet « %s », ligne %d : %s', $onglet, $erreur['numero'], $erreur['message']);
+    }
+
+    return $lignes;
 }
 
 /**

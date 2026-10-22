@@ -3,25 +3,27 @@
 Écrit pour être lu par quelqu'un — ou par une nouvelle session d'assistant —
 qui reprend le projet sans rien savoir de ce qui a été dit avant.
 
-Dernière mise à jour : 29 août 2026.
+Dernière mise à jour : 27 septembre 2026.
 
 ## En une phrase
 
 Le site de Chez Auguste est **en ligne et fonctionnel** sur
 <https://chezauguste.com>. Le restaurateur met à jour sa carte dans un Google
-Sheet et clique « Publier » : le serveur régénère les pages tout seul.
+Sheet, depuis son téléphone s'il veut : le serveur reprend le Sheet toutes les
+dix minutes et régénère les pages tout seul.
 
 ## Ce qui marche
 
 | | |
 | --- | --- |
 | Accueil, carte | générés depuis le Sheet, en ligne |
-| Bouton « Publier » | menu **Site** dans le Sheet → `publier.php` → régénération |
+| Publication automatique | cron toutes les 10 min → `src/automatique.php`, alerte par courriel si ça coince |
+| Bouton « Publier » | menu **Site** dans le Sheet → `publier.php`, pour publier tout de suite depuis un ordinateur |
 | Contact | `contact.php`, testé, courriel reçu |
 | Mentions légales, confidentialité | générées, **contenu incomplet** (voir plus bas) |
 | Métadonnées, JSON-LD, sitemap | en place |
 | HTTPS, domaine canonique, gzip, cache | réglés dans `.htaccess` |
-| Réservation | **codée et testée, mais éteinte** (voir plus bas) |
+| Réservation | par L'Addition (voir plus bas) |
 
 ## Ce qui reste à faire, par ordre de gêne
 
@@ -33,30 +35,59 @@ cellule à corriger.
 `12345678900012` et « Prénom Nom » sont les exemples de format qui ont été
 recopiés tels quels. Une page qui *paraît* remplie est plus gênante qu'une
 page marquée À COMPLÉTER. Il manque `raison_sociale` et `forme_juridique`.
+Le directeur de la publication est obligatoire (LCEN, art. 1-1) : pour une
+SARL, c'est le gérant, il suffit de mettre son nom.
 
-**3. La photo ne vous appartient pas.** `medias-sources/bouillon.jpg` porte le
-filigrane de Sortiraparis et montre, sauf erreur, la salle du Bouillon Julien.
-À remplacer par une vraie photo de l'établissement dès que possible.
-
-**4. Une vedette de trop.** Sept plats sont cochés `vedette`, l'accueil n'en
+**3. Une vedette de trop.** Sept plats sont cochés `vedette`, l'accueil n'en
 affiche que six. Le build le signale à chaque publication.
 
-## La réservation est éteinte, pas supprimée
+## La publication automatique
 
-Tout le code est en place : `public/reservation.php`, les créneaux déduits des
-horaires, la validation des jours de fermeture, le JSON-LD, les tests. Il a
-tourné en production et une demande réelle a été reçue.
+Le menu « Site > Publier » n'existe pas dans les applis Google Sheets pour
+téléphone : Google n'y affiche pas les menus Apps Script. Or le restaurateur
+retire des plats selon les produits du jour, depuis son téléphone.
 
-Il est éteint sur décision, le temps de savoir si le restaurant veut vraiment
-prendre des réservations — un bouillon fonctionne traditionnellement sans.
+Une tâche cron lance donc `src/automatique.php` toutes les dix minutes. Elle
+ne dit rien quand tout va bien. Quand la carte est mal remplie deux passages
+de suite, ou le Sheet injoignable pendant une heure, elle écrit une fois à
+`courriel_alertes` (config.php), puis une fois encore quand c'est réparé.
 
-**Pour rallumer** : une ligne `reservation` à `oui` dans l'onglet `infos`, puis
-« Publier ». Reviennent alors d'un coup l'entrée de menu, le bouton d'accueil,
-la page, l'entrée de sitemap et `acceptsReservations: True` dans le JSON-LD.
-Rien à redéployer.
+`outils/deployer.sh` installe la tâche si elle manque. Pour l'arrêter :
+cPanel > Tâches Cron, ou `crontab -e` en SSH.
 
-**Pour éteindre** : la même ligne à `non`, ou supprimée. `reservation.php`
-répond alors 404 avec une page qui explique et renvoie vers le téléphone.
+Deux conséquences dans le générateur : une page identique n'est plus réécrite,
+et le plan du site date chaque page de son fichier plutôt que du jour du build.
+
+Les colonnes `actif` et `vedette` acceptent des cases à cocher (`TRUE` dans le
+CSV) comme « oui » tapé à la main.
+
+## La réservation : par L'Addition, par le site, ou pas du tout
+
+Le restaurant prend ses réservations sur L'Addition :
+<https://reservation.laddition.com/booking/chez-auguste-courbevoie#/date>.
+
+Une seule ligne décide de tout, `reservation` dans l'onglet `infos`, puis
+« Publier ». Rien à redéployer.
+
+**Une adresse en `https://`** : le menu « Réserver », le bouton de l'accueil
+et le JSON-LD y mènent tout droit, dans le même onglet. `reservation.php`
+redirige vers elle (302), la politique de confidentialité nomme le
+prestataire, et la page sort du sitemap. Changer de prestataire, c'est changer
+la cellule.
+
+**`oui`** : le formulaire de demande du site, `public/reservation.php`, avec
+ses créneaux déduits des horaires et le refus des jours de fermeture. Il a
+tourné en production et une demande réelle a été reçue. Le code reste en place.
+
+**`non`, ou ligne supprimée** : ni menu, ni bouton. `reservation.php` répond
+404 avec une page qui explique et renvoie vers le téléphone.
+
+Une valeur qui n'est aucune des trois — une adresse collée sans `https://`,
+typiquement — laisse la réservation éteinte, et le build le signale.
+
+Avec « Réserver », le menu a quatre entrées : sous 448 px son corps diminue
+par paliers pour qu'il tienne sur une ligne jusqu'à 320 px (`style.css`,
+`.menu:has(> :nth-child(4))`). Les seuils ont été mesurés au pixel près.
 
 `src/verif.sh` vérifie que le JSON-LD et le site racontent la même histoire,
 dans un sens comme dans l'autre.

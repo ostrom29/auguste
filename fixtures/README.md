@@ -3,8 +3,9 @@
 Jeux de CSV pour lancer le générateur sans réseau. Chaque dossier contient un
 `carte.csv` et un `infos.csv`.
 
-À la racine, `carte.csv` et `infos.csv` sont une copie conforme du Google
-Sheet réel : c'est le jeu nominal.
+À la racine, `carte.csv` et `infos.csv` sont le jeu nominal : ils exercent
+toutes les colonnes, y compris `allergenes` et `ordre`, que le Sheet réel n'a
+plus. `colonnes-minimales/` reprend la forme du Sheet réel.
 
     php src/build.php --source=fixtures
 
@@ -14,6 +15,8 @@ Sheet réel : c'est le jeu nominal.
 | --------------------- | -------------------------------------------------------------------------------- |
 | *(racine)*            | Le cas nominal. Contient une ligne `actif=non` et des plats sans description.     |
 | `colonnes-deplacees/` | Colonnes dans un ordre différent dans les deux onglets. Le build doit réussir.    |
+| `reservation-externe/`| Le jeu nominal, avec une adresse L'Addition dans `reservation`.                  |
+| `colonnes-minimales/` | La forme du Sheet réel depuis septembre 2026 : ni `allergenes` ni `ordre`, cases à cocher (`TRUE`/`FALSE`). |
 
 ## Jeux cassés
 

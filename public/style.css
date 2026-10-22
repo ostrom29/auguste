@@ -239,7 +239,8 @@ h3 {
 
 /* --------------------------------------------------------------------- Menu */
 
-/* Trois entrées : elles tiennent sur une ligne dès 320 px, et se replient
+/* Trois entrées, quatre avec « Réserver » : elles tiennent sur une ligne dès
+   320 px (voir plus bas pour quatre), et se replient
    d'elles-mêmes si la place manque. Aucun bouton à ouvrir, donc aucun
    JavaScript, donc rien qui puisse rester fermé. */
 .menu {
@@ -326,6 +327,44 @@ h3 {
   .menu__lien {
     font-size: 0.85rem;
     letter-spacing: 0.03em;
+  }
+}
+
+/* Quatre entrées quand la réservation est ouverte : « Réserver » allonge le
+   menu d'un quart. Mêmes réglages que pour trois, mais pris plus tôt, et un
+   corps plus petit sous 352 px — il manquait jusqu'à 40 px à 360 px.
+   Seuils mesurés dans le navigateur, page de contact comprise : son entrée
+   en gras est la plus longue. Sans :has(), un vieux navigateur replie le menu
+   sur deux lignes ; c'est moins joli, rien de plus. */
+@media (max-width: 28rem) {
+  .menu:has(> :nth-child(4)) {
+    gap: 0.3rem 0.9rem;
+  }
+
+  .menu:has(> :nth-child(4)) .menu__lien {
+    letter-spacing: 0.05em;
+  }
+}
+
+@media (max-width: 25.5rem) {
+  .menu:has(> :nth-child(4)) {
+    gap: 0.3rem 0.75rem;
+  }
+
+  .menu:has(> :nth-child(4)) .menu__lien {
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+  }
+}
+
+@media (max-width: 22rem) {
+  .menu:has(> :nth-child(4)) {
+    gap: 0.3rem 0.6rem;
+  }
+
+  .menu:has(> :nth-child(4)) .menu__lien {
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -508,27 +547,43 @@ section {
    Sur petit écran les trois s'empilent ; au-delà, l'appel prend sa ligne et
    les deux autres se partagent la suivante. Il y a une action principale et
    deux secondaires, la mise en page doit le dire. */
-.coordonnees__appel {
+/* Deux rangées : avoir une table (appeler, réserver), puis venir
+   (itinéraire, Instagram). Chacune se centre sur ce qu'elle contient ; les
+   boutons ont tous la même largeur, et un bouton seul prend celle de deux,
+   pour que les rangées restent alignées. */
+.coordonnees__actions {
   display: grid;
-  justify-content: center;
   gap: 0.8rem;
   margin: 1.4rem 0 0;
 }
 
-.coordonnees__appel .bouton {
-  min-width: 13rem;
-  width: 100%;
-  max-width: 22rem;
-  justify-self: center;
+.coordonnees__rangee {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  margin: 0;
 }
 
-@media (min-width: 32rem) {
-  .coordonnees__appel {
-    grid-template-columns: repeat(2, minmax(0, 13rem));
+.coordonnees__rangee .bouton {
+  width: 100%;
+  max-width: 22rem;
+}
+
+/* Côte à côte seulement quand « Appeler le 06… » tient sur une ligne dans sa
+   moitié : il lui faut 16 rem, deux fois plus l'écart. */
+@media (min-width: 36rem) {
+  .coordonnees__rangee {
+    display: flex;
+    justify-content: center;
   }
 
-  .coordonnees__appel .bouton:not(.bouton--discret) {
-    grid-column: 1 / -1;
+  .coordonnees__rangee .bouton {
+    flex: 0 0 16rem;
+    max-width: none;
+  }
+
+  .coordonnees__rangee .bouton:only-child {
+    flex-basis: 32.8rem;
   }
 }
 
@@ -630,6 +685,32 @@ section {
 .vedettes__lien {
   margin: 2.2rem 0 0;
   text-align: center;
+}
+
+/* Même voix que la note sur les allergènes : une précision, pas une annonce.
+   Le bandeau .message reste réservé à ce qui est exceptionnel. */
+.carte__arrivages,
+.categorie__note {
+  font-size: 0.9rem;
+  font-style: italic;
+  text-align: center;
+  color: var(--encre-douce);
+}
+
+/* Deux lignes de longueur égale plutôt qu'un mot seul sur la seconde. Un
+   navigateur qui ne connaît pas la propriété coupe comme avant. */
+.carte__arrivages,
+.categorie__note,
+.note-allergenes {
+  text-wrap: balance;
+}
+
+.carte__arrivages {
+  margin: 0 0 2.5rem;
+}
+
+.categorie__note {
+  margin: 1.2rem 0 0;
 }
 
 .note-allergenes {

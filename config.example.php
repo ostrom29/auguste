@@ -39,4 +39,10 @@ return [
     //
     // Il doit faire au moins 16 caractères.
     'secret_publication' => 'a-remplacer-par-un-secret-genere',
+
+    // Qui prévenir quand la publication automatique (src/automatique.php)
+    // échoue : une carte mal remplie, ou le Sheet injoignable depuis une heure.
+    // Plusieurs adresses se séparent par des virgules.
+    //
+    // 'courriel_alertes' => 'restaurateur@exemple.fr, developpeur@exemple.fr',
 ];

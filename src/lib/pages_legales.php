@@ -19,9 +19,9 @@ require_once __DIR__ . '/rendu.php';
 /**
  * Ce qu'il faut vraiment saisir : le reste se déduit.
  *
- * L'article 6-III de la LCEN impose davantage de mentions, mais le SIREN est
- * contenu dans le SIRET, le numéro RCS est le SIREN, et la clé de TVA se
- * calcule. Faire saisir à la main ce qu'une soustraction donne, c'est trois
+ * L'article 1-1 de la LCEN (l'ancien 6-III, déplacé par la loi SREN de 2024)
+ * impose davantage de mentions, mais le SIREN est contenu dans le SIRET, le
+ * numéro RCS est le SIREN, et la clé de TVA se calcule. Faire saisir à la main ce qu'une soustraction donne, c'est trois
  * occasions de se tromper pour rien.
  */
 const LEGAL_CLES = [
@@ -145,6 +145,10 @@ function rendre_confidentialite(array $infos, string $urlSite): string
     $titre = 'Politique de confidentialité — ' . $nom;
     $courriel = mention($infos, 'email');
 
+    // La page affirme que seul le formulaire de contact collecte quelque
+    // chose : c'est vrai du site, mais une réservation passe par un tiers.
+    $prestataire = parse_url(lien_externe($infos, 'reservation'), PHP_URL_HOST) ?: '';
+
     $lignes = [
         '    <p class="chapo">Cette page décrit ce que nous faisons des informations que '
             . 'vous nous transmettez. Elle est courte, parce que nous en collectons très peu.</p>',
@@ -153,6 +157,10 @@ function rendre_confidentialite(array $infos, string $urlSite): string
         '    <p>Uniquement ce que vous saisissez dans le formulaire de contact : votre nom, '
             . 'votre adresse électronique et votre message. Le site n’utilise aucun cookie, '
             . 'aucun traceur et aucun outil de mesure d’audience.</p>',
+
+        $prestataire === '' ? '' : '    <p>La réservation en ligne se fait chez notre prestataire, '
+            . 'sur son propre site (' . e($prestataire) . ') : ce que vous y saisissez relève '
+            . 'de sa politique de confidentialité, pas de celle-ci.</p>',
 
         '    <h2>Pourquoi</h2>',
         '    <p>Pour vous répondre, et pour rien d’autre. Ces informations ne sont ni vendues, '
@@ -187,7 +195,7 @@ function rendre_confidentialite(array $infos, string $urlSite): string
         'confidentialite.html',
         'Ce que ' . $nom . ' fait des informations que vous transmettez. Aucun cookie, aucun traceur.',
         $urlSite,
-        $lignes
+        array_values(array_filter($lignes, static fn (string $ligne): bool => $ligne !== ''))
     );
 }
 

@@ -44,6 +44,20 @@ CREME = "#FBF7F0"
 # masque et empêcherait le recadrage.
 LOGO_PLAGE = "30%,50%"
 
+# L'icône : le « A » d'AUGUSTE, crème sur un carré rouge.
+#
+# Google n'affiche une icône dans ses résultats que si elle est carrée ; le
+# logo entier réduit à 64 px de large donnait 64x47, écarté au profit d'un
+# globe générique. Et même carré, « Chez Auguste — Bouillon-brasserie » est
+# illisible à 16 px : une lettre seule se reconnaît.
+#
+# Un fond plein plutôt que transparent : un A rouge sur transparent
+# disparaîtrait sur un onglet ou un résultat en thème sombre.
+FAVICON_COTE = 192
+# Part de la hauteur occupée par la lettre. Assez grande pour se lire à
+# 16 px, assez petite pour tenir dans un cercle si l'icône est rognée en rond.
+FAVICON_LETTRE = 0.60
+
 # Largeurs et proportion de la bannière. Doivent rester d'accord avec
 # SALLE_LARGEURS et SALLE_RATIO dans src/lib/rendu.php.
 SALLE_LARGEURS = (420, 720, 1040)
@@ -86,7 +100,7 @@ def preparer_logo(source: Path) -> None:
         str(masque),
     ])
 
-    for nom, largeur in (("logo-2x.png", 880), ("logo.png", 440), ("favicon.png", 64)):
+    for nom, largeur in (("logo-2x.png", 880), ("logo.png", 440)):
         cible = SORTIE / nom
         executer([
             "convert",
@@ -101,6 +115,66 @@ def preparer_logo(source: Path) -> None:
         print(f"  {nom:<16} {largeur:>4} px   {poids(cible)}")
 
     masque.unlink()
+
+
+def preparer_favicon(source: Path) -> None:
+    """Extrait le « A » d'AUGUSTE et le pose, crème, sur un carré rouge."""
+    lettre = SORTIE / "_lettre.png"
+
+    executer([
+        "convert", str(source),
+        "-colorspace", "Gray", "-negate", "-level", LOGO_PLAGE,
+        "-trim", "+repage",
+        str(lettre),
+    ])
+
+    # Le coin gauche de la ligne « AUGUSTE » : le A et un morceau du U. Le
+    # cadrage n'a pas à être exact, la forme la plus grande est isolée ensuite.
+    # En pixels : dans un décalage, ImageMagick lit « +24% » comme 24 pixels.
+    largeur, hauteur = dimensions(lettre)
+    cadre = f"{round(largeur * 0.22)}x{round(hauteur * 0.40)}+0+{round(hauteur * 0.24)}"
+    executer(["convert", str(lettre), "-crop", cadre, "+repage", "-trim", "+repage", str(lettre)])
+
+    # La plus grande forme claire est le A : on recadre sur sa boîte.
+    resultat = subprocess.run(
+        ["convert", str(lettre), "-threshold", "50%",
+         "-define", "connected-components:verbose=true",
+         "-connected-components", "8", "null:"],
+        capture_output=True, text=True, check=True,
+    )
+    formes = []
+
+    for ligne in resultat.stdout.splitlines():
+        champs = ligne.split()
+
+        if len(champs) == 5 and champs[4] == "gray(255)":
+            formes.append((int(champs[3]), champs[1]))
+
+    boite = max(formes)[1]
+    executer(["convert", str(lettre), "-crop", boite, "+repage", str(lettre)])
+
+    # Composé en grand puis réduit : les bords de la lettre restent nets.
+    grand = 512
+    cible = SORTIE / "favicon.png"
+    executer([
+        "convert",
+        "-size", f"{grand}x{grand}", f"xc:{LOGO_ROUGE}",
+        "(",
+        "-size", f"{grand}x{grand}", f"xc:{CREME}",
+        "(", str(lettre), "-resize", f"x{round(grand * FAVICON_LETTRE)}",
+        "-background", "black", "-gravity", "center", "-extent", f"{grand}x{grand}", ")",
+        "-alpha", "off", "-compose", "CopyOpacity", "-composite",
+        ")",
+        "-compose", "Over", "-composite",
+        "-resize", f"{FAVICON_COTE}x{FAVICON_COTE}",
+        # Deux couleurs et leurs nuances d'anticrénelage : une palette suffit,
+        # et divise le poids par cinq.
+        "-strip", "-colors", "32", "-define", "png:compression-level=9",
+        f"PNG8:{cible}",
+    ])
+    print(f"  favicon.png     {FAVICON_COTE}x{FAVICON_COTE}   {poids(cible)}")
+
+    lettre.unlink()
 
 
 def dimensions(chemin: Path) -> tuple[int, int]:
@@ -257,6 +331,8 @@ def main() -> None:
         preparer_logo(logo)
         print("\nOrnement")
         preparer_ornement(logo)
+        print("\nIcône")
+        preparer_favicon(logo)
 
     # La photo du lieu n'est traitée que si elle existe vraiment. Tant qu'on
     # n'en a pas, le site s'en passe : mieux vaut pas d'image que celle d'une

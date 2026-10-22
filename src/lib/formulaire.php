@@ -108,6 +108,8 @@ function page_formulaire(array $gabarit, string $page, string $titre, string $h1
 {
     $entete = $gabarit['entetes'][$page] ?? reset($gabarit['entetes']);
     $style = $gabarit['style'];
+    // Repli sans empreinte : un gabarit généré avant l'icône n'a pas la clé.
+    $favicon = $gabarit['favicon'] ?? 'img/favicon.png';
     $pied = $gabarit['pied'];
 
     return <<<HTML
@@ -119,7 +121,7 @@ function page_formulaire(array $gabarit, string $page, string $titre, string $h1
       <title>{$titre}</title>
       <meta name="robots" content="noindex">
       <link rel="stylesheet" href="{$style}">
-      <link rel="icon" href="img/favicon.png" type="image/png">
+      <link rel="icon" href="{$favicon}" type="image/png">
     </head>
     <body class="page page--formulaire">
       <a class="evitement" href="#contenu">Aller au contenu</a>

@@ -1,0 +1,15 @@
+categorie,nom,description,prix,actif,vedette
+Entrées,Œufs mimosa,,3.90,TRUE,TRUE
+Entrées,Poireaux vinaigrette,,3.70,TRUE,FALSE
+Entrées,"Harengs, pommes de terre",,4.10,TRUE,FALSE
+Plats,Bœuf bourguignon,Coquillettes,13.70,TRUE,TRUE
+Plats,Croque Monsieur chèvre miel,Frites maison et salade,13.90,TRUE,FALSE
+Plats,Pavé de Saumon,"Purée de patates douces, sauce vierge",13.50,TRUE,FALSE
+Plats,Tartare de bavette d'aloyau au couteau,Frites maison et salade,11.70,TRUE,TRUE
+Desserts,Crème brûlée,Vanille de Madagascar,4.50,TRUE,TRUE
+Desserts,"Brioche perdue, glace vanille",Sauce caramel,4.50,TRUE,FALSE
+Desserts,Crème caramel,,3.90,TRUE,FALSE
+Boissons,Pinte de blonde,,7.00,TRUE,FALSE
+Boissons,PInte de blanche,,6.50,TRUE,FALSE
+Boissons,Verre de vin,,3.50,TRUE,FALSE
+Boissons,Expresso,,2.00,TRUE,FALSE

@@ -9,7 +9,7 @@ declare(strict_types=1);
  * `public/carte.html` n'est pas touché et la version en ligne reste en place.
  */
 
-const CARTE_ENTETES = ['categorie', 'nom', 'description', 'prix', 'allergenes', 'ordre', 'actif'];
+const CARTE_ENTETES = ['categorie', 'nom', 'description', 'prix', 'actif'];
 const INFOS_ENTETES = ['cle', 'valeur'];
 
 /**
@@ -18,8 +18,13 @@ const INFOS_ENTETES = ['cle', 'valeur'];
  * « vedette » désigne les plats mis en avant sur la page d'accueil. Tant que
  * la colonne n'existe pas dans le Sheet, l'accueil se rabat sur le premier
  * plat de chaque catégorie.
+ *
+ * « allergenes » et « ordre » ont été retirées du Sheet réel : chaque colonne
+ * de plus est une colonne à faire défiler sur un téléphone. Sans « ordre »,
+ * les plats suivent l'ordre des lignes ; sans « allergenes », la carte s'en
+ * tient à la mention « information disponible en salle ».
  */
-const CARTE_ENTETES_FACULTATIFS = ['vedette'];
+const CARTE_ENTETES_FACULTATIFS = ['vedette', 'allergenes', 'ordre'];
 
 /**
  * Clés de l'onglet « infos » attendues par le gabarit. Leur absence n'empêche
@@ -94,7 +99,8 @@ function valider_carte(array $csv): array
             ));
         }
 
-        if (!est_entier($champs['ordre'])) {
+        // Vide, ou colonne absente : la ligne garde sa place dans le Sheet.
+        if (($champs['ordre'] ?? '') !== '' && !est_entier($champs['ordre'])) {
             $erreurs[] = erreur('carte.csv', $numero, sprintf(
                 'le champ « ordre » doit être un entier (lu : « %s »)',
                 $champs['ordre']
@@ -106,7 +112,7 @@ function valider_carte(array $csv): array
         $erreurs[] = erreur(
             'carte.csv',
             null,
-            'aucune ligne active : il faut au moins un plat avec « actif » à « oui »'
+            'aucune ligne active : il faut au moins un plat avec « actif » coché ou à « oui »'
         );
     }
 
@@ -225,11 +231,14 @@ function erreur(string $fichier, ?int $numero, string $message): array
 }
 
 /**
- * Seul « oui » (quelle que soit la casse) publie une ligne.
+ * « oui », quelle que soit la casse, ou une case cochée publie une ligne.
  */
 function ligne_active(string $actif): bool
 {
-    return mb_strtolower(trim($actif), 'UTF-8') === 'oui';
+    // « oui » tapé à la main, ou une case à cocher : le CSV publié l'exporte
+    // en TRUE, que le tableur affiche parfois VRAI. Sur téléphone, cocher est
+    // un geste, taper « oui » en est cinq.
+    return in_array(mb_strtolower(trim($actif), 'UTF-8'), ['oui', 'true', 'vrai'], true);
 }
 
 /**

@@ -93,35 +93,6 @@ repondre(
 // ---------------------------------------------------------------------------
 
 /**
- * Le restaurateur voit deux onglets, pas deux fichiers CSV — et « ligne 12 »
- * ne veut rien dire tant qu'on n'a pas dit dans lequel.
- *
- * @param list<array{fichier: string|null, numero: int|null, message: string}> $erreurs
- * @return list<string>
- */
-function lignes_erreurs(array $erreurs): array
-{
-    $onglets = ['carte.csv' => 'carte', 'infos.csv' => 'infos'];
-    $lignes = [];
-
-    foreach ($erreurs as $erreur) {
-        $onglet = $onglets[$erreur['fichier']] ?? null;
-
-        if ($onglet === null) {
-            $lignes[] = $erreur['message'];
-
-            continue;
-        }
-
-        $lignes[] = $erreur['numero'] === null
-            ? sprintf('onglet « %s » : %s', $onglet, $erreur['message'])
-            : sprintf('onglet « %s », ligne %d : %s', $onglet, $erreur['numero'], $erreur['message']);
-    }
-
-    return $lignes;
-}
-
-/**
  * @param array<string, mixed> $resultat
  * @return never
  */
@@ -144,7 +115,7 @@ function repondre_succes(array $resultat, bool $texte)
 
     if ($resultat['ignorees'] > 0) {
         $lignes[] = sprintf(
-            '%d %s non %s, car la colonne « actif » n\'est pas à « oui ».',
+            '%d %s non %s, car la colonne « actif » n\'est pas cochée.',
             $resultat['ignorees'],
             accord($resultat['ignorees'], 'ligne'),
             accord($resultat['ignorees'], 'publiée')

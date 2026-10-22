@@ -122,7 +122,7 @@ function json_ld(array $infos, array $categories, string $urlSite): string
         // Suit l'état réel du site : dire à Google qu'on réserve quand la page
         // n'existe pas enverrait des clients sur une porte fermée.
         'acceptsReservations' => reservation_active($infos) ? 'True' : 'False',
-        'potentialAction' => reservation_active($infos) ? action_reserver($urlSite) : null,
+        'potentialAction' => reservation_active($infos) ? action_reserver($infos, $urlSite) : null,
     ], static fn ($valeur): bool => $valeur !== null && $valeur !== [] && $valeur !== '');
 
     return implode("\n", [
@@ -137,22 +137,30 @@ function json_ld(array $infos, array $categories, string $urlSite): string
  * Déclare l'adresse où réserver : c'est ce qui permet à Google de proposer
  * l'action plutôt que de la deviner.
  *
+ * @param array<string, string> $infos
  * @return array<string, mixed>
  */
-function action_reserver(string $urlSite): array
+function action_reserver(array $infos, string $urlSite): array
 {
+    // Le formulaire du site ne prend qu'une demande, que le restaurant
+    // confirme ensuite ; un prestataire réserve la table sur-le-champ.
+    $formulaire = formulaire_reservation_actif($infos);
+
     return [
         '@type' => 'ReserveAction',
         'target' => [
             '@type' => 'EntryPoint',
-            'urlTemplate' => $urlSite . '/reservation.php',
+            'urlTemplate' => $formulaire ? $urlSite . '/reservation.php' : lien_reservation($infos),
             'inLanguage' => 'fr',
             'actionPlatform' => [
                 'https://schema.org/DesktopWebPlatform',
                 'https://schema.org/MobileWebPlatform',
             ],
         ],
-        'result' => ['@type' => 'FoodEstablishmentReservation', 'name' => 'Demande de réservation'],
+        'result' => [
+            '@type' => 'FoodEstablishmentReservation',
+            'name' => $formulaire ? 'Demande de réservation' : 'Réservation',
+        ],
     ];
 }
 

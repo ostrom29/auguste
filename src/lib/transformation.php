@@ -13,7 +13,8 @@ const ESPACE_INSECABLE = "\u{00A0}";
  * Regroupe les plats actifs par catégorie.
  *
  * Les catégories sortent dans leur ordre d'apparition dans le Sheet ; à
- * l'intérieur d'une catégorie, les plats sont triés par « ordre » croissant.
+ * l'intérieur d'une catégorie, les plats sont triés par « ordre » croissant,
+ * ou suivent l'ordre des lignes si la colonne est absente ou vide.
  *
  * @param list<array{numero: int, champs: array<string, string>}> $lignes
  * @return array{
@@ -48,9 +49,11 @@ function transformer_carte(array $lignes): array
             'nom' => $champs['nom'],
             'description' => $champs['description'],
             'prix' => formater_prix($champs['prix']),
-            'allergenes' => decouper_allergenes($champs['allergenes']),
-            'ordre' => (int) trim($champs['ordre']),
-            // Colonne facultative : absente du Sheet, la clé n'existe pas.
+            // Colonnes facultatives : absentes du Sheet, les clés n'existent pas.
+            'allergenes' => decouper_allergenes($champs['allergenes'] ?? ''),
+            // Sans ordre, tous les plats valent 0 et le tri stable garde
+            // l'ordre des lignes.
+            'ordre' => (int) trim($champs['ordre'] ?? ''),
             'vedette' => ligne_active($champs['vedette'] ?? ''),
         ];
     }

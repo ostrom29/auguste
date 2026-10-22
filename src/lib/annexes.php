@@ -20,8 +20,9 @@ function pages_indexees(array $infos): array
     $pages = ['' => '1.0', 'carte.html' => '0.9'];
 
     // Une page absente du site n'a rien à faire dans le plan qu'on donne aux
-    // moteurs : ils la visiteraient pour recevoir un 404.
-    if (reservation_active($infos)) {
+    // moteurs : ils la visiteraient pour recevoir un 404, ou une redirection
+    // quand un prestataire prend les réservations.
+    if (formulaire_reservation_actif($infos)) {
         $pages['reservation.php'] = '0.7';
     }
 
@@ -122,12 +123,14 @@ function rendre_robots(string $urlSite): string
 }
 
 /**
+ * Chaque page porte la date de son fichier, c'est-à-dire de sa dernière
+ * modification réelle : le générateur ne réécrit pas une page inchangée.
+ * Google ignore un lastmod qui change tous les jours sans raison.
+ *
  * @param array<string, string> $infos
  */
-function rendre_sitemap(string $urlSite, array $infos): string
+function rendre_sitemap(string $urlSite, array $infos, string $dossier): string
 {
-    $jour = date('Y-m-d');
-
     $lignes = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -136,7 +139,10 @@ function rendre_sitemap(string $urlSite, array $infos): string
     foreach (pages_indexees($infos) as $page => $priorite) {
         $lignes[] = '  <url>';
         $lignes[] = '    <loc>' . e($urlSite . '/' . $page) . '</loc>';
-        $lignes[] = '    <lastmod>' . $jour . '</lastmod>';
+        $fichier = $dossier . '/' . ($page === '' ? 'index.html' : $page);
+        $date = is_file($fichier) ? (int) filemtime($fichier) : time();
+
+        $lignes[] = '    <lastmod>' . date('Y-m-d', $date) . '</lastmod>';
         $lignes[] = '    <priority>' . $priorite . '</priority>';
         $lignes[] = '  </url>';
     }
@@ -221,6 +227,7 @@ function rendre_gabarit(array $infos, string $urlSite): string
         'entetes' => $entetes,
         'pied' => rendre_pied($infos),
         'style' => ressource('style.css'),
+        'favicon' => ressource('img/favicon.png'),
         'nom' => info($infos, 'nom', NOM_PAR_DEFAUT),
         'email' => info($infos, 'email'),
         'telephone' => $telephone,
@@ -234,7 +241,10 @@ function rendre_gabarit(array $infos, string $urlSite): string
         // reservation.php se ferme lui-même quand la prise de réservation est
         // éteinte : le fichier reste déployé, mais il ne sert plus de
         // formulaire. Rien n'est supprimé, tout se rallume par le Sheet.
-        'reservation_active' => reservation_active($infos),
+        'reservation_active' => formulaire_reservation_actif($infos),
+        // Quand un prestataire prend les réservations, reservation.php y
+        // renvoie : les anciens liens et ceux que Google a retenus y mènent.
+        'reservation_externe' => lien_externe($infos, 'reservation'),
         'telephone_lien' => $telephone === '' ? '' : lien_telephone($telephone),
     ];
 

@@ -211,6 +211,15 @@ function rendre_carte(array $categories, array $infos, string $urlSite): string
         }
 
         $sections[] = '      </ul>';
+
+        // Les boissons en ligne ne sont qu'une sélection : la vraie carte est
+        // longue, et chaque prix publié est un prix à tenir à jour. Reconnue
+        // par son nom : renommée dans le Sheet, la catégorie perd sa note.
+        if (str_starts_with(mb_strtolower($categorie['nom'], 'UTF-8'), 'boisson')) {
+            $sections[] = '      <p class="categorie__note">Une sélection : la carte complète des '
+                . 'boissons vous attend sur place.</p>';
+        }
+
         $sections[] = '    </section>';
     }
 
@@ -222,6 +231,10 @@ function rendre_carte(array $categories, array $infos, string $urlSite): string
             rendre_entete($infos, 'carte', 'carte.html'),
             '  <main id="contenu" class="carte">',
             rendre_message($infos),
+            // Avant les plats et non après : c'est en choisissant qu'on doit
+            // savoir qu'un plat peut manquer, pas une fois arrivé en bas.
+            '    <p class="carte__arrivages">La carte suit les arrivages : quelques plats '
+                . 'peuvent changer d’un jour à l’autre.</p>',
             implode("\n", $sections),
             '    <p class="note-allergenes">Une information sur les allergènes est disponible en salle. '
                 . 'N’hésitez pas à nous interroger.</p>',
@@ -265,18 +278,74 @@ function document(string $classe, string $titre, array $tete, string $corps): st
 }
 
 /**
- * La prise de réservation est-elle ouverte ?
+ * Où mène « Réserver » : une adresse, ou '' si l'on ne réserve pas.
  *
- * Elle est éteinte par défaut : un formulaire de réservation que personne ne
- * dépouille est pire que pas de formulaire du tout. Pour l'allumer, une ligne
- * « reservation » à « oui » dans l'onglet infos — le code reste en place et
- * complet en attendant.
+ * La ligne « reservation » de l'onglet infos prend l'une de trois formes :
+ *
+ * - l'adresse d'un service de réservation en ligne, L'Addition ou un autre :
+ *   les boutons y mènent tout droit ;
+ * - « oui » : le formulaire de demande du site, reservation.php ;
+ * - vide ou « non » : pas de réservation.
+ *
+ * Éteinte par défaut : un formulaire de réservation que personne ne dépouille
+ * est pire que pas de formulaire du tout.
+ *
+ * @param array<string, string> $infos
+ */
+function lien_reservation(array $infos): string
+{
+    $externe = lien_externe($infos, 'reservation');
+
+    if ($externe !== '') {
+        return $externe;
+    }
+
+    return mb_strtolower(info($infos, 'reservation'), 'UTF-8') === 'oui' ? 'reservation.php' : '';
+}
+
+/**
+ * La prise de réservation est-elle ouverte, par le site ou par un prestataire ?
  *
  * @param array<string, string> $infos
  */
 function reservation_active(array $infos): bool
 {
-    return mb_strtolower(info($infos, 'reservation'), 'UTF-8') === 'oui';
+    return lien_reservation($infos) !== '';
+}
+
+/**
+ * Le formulaire du site est-il celui qui prend les réservations ?
+ *
+ * Faux quand un prestataire s'en charge : reservation.php renvoie alors chez
+ * lui, et n'a plus sa place dans le plan du site.
+ *
+ * @param array<string, string> $infos
+ */
+function formulaire_reservation_actif(array $infos): bool
+{
+    return lien_reservation($infos) === 'reservation.php';
+}
+
+/**
+ * Une adresse collée sans son « https:// » ne donnerait aucun lien, et rien
+ * sur le site ne dirait pourquoi le bouton « Réserver » manque.
+ *
+ * @param array<string, string> $infos
+ * @return list<string>
+ */
+function avertissements_reservation(array $infos): array
+{
+    $valeur = info($infos, 'reservation');
+
+    if ($valeur === '' || reservation_active($infos) || mb_strtolower($valeur, 'UTF-8') === 'non') {
+        return [];
+    }
+
+    return [sprintf(
+        'onglet infos, « reservation » vaut « %s » : ni oui, ni non, ni une adresse '
+        . 'commençant par https://. La réservation reste éteinte.',
+        $valeur
+    )];
 }
 
 /**
@@ -293,7 +362,7 @@ function menu(array $infos): array
     ];
 
     if (reservation_active($infos)) {
-        $entrees['reservation.php'] = 'Réserver';
+        $entrees[lien_reservation($infos)] = 'Réserver';
     }
 
     $entrees['contact.php'] = 'Nous écrire';
@@ -304,8 +373,8 @@ function menu(array $infos): array
 /**
  * La navigation principale.
  *
- * Trois entrées seulement : elles tiennent sur une ligne, même sur un petit
- * téléphone, et se replient d'elles-mêmes si la place manque. Pas de bouton
+ * Trois entrées, quatre quand la réservation est ouverte : elles tiennent sur
+ * une ligne, même sur un petit téléphone, et se replient d'elles-mêmes si la place manque. Pas de bouton
  * hamburger, donc pas de JavaScript, donc rien qui puisse ne pas s'ouvrir.
  */
 function rendre_menu(array $infos, string $courant): string
@@ -627,11 +696,22 @@ function rendre_coordonnees(array $infos): string
     array_push($bloc, ...$lignes);
     $bloc[] = '      </address>';
 
-    $actions = [];
+    // Deux rangées, par rôle : avoir une table, puis venir. Une seule liste
+    // dans une grille de deux laissait le quatrième bouton seul, calé à gauche.
+    $table = [];
+    $venir = [];
 
     if ($telephone !== '') {
-        $actions[] = '<a class="bouton" href="tel:' . e(lien_telephone($telephone)) . '">'
+        $table[] = '<a class="bouton" href="tel:' . e(lien_telephone($telephone)) . '">'
             . 'Appeler le ' . e($telephone) . '</a>';
+    }
+
+    // Dans le même onglet, même chez un prestataire, à l'inverse de l'itinéraire
+    // et d'Instagram : réserver est le but de la visite, pas un détour. Sur un
+    // téléphone, le bouton retour ramène alors au site.
+    if (reservation_active($infos)) {
+        $table[] = '<a class="bouton bouton--discret" href="' . e(lien_reservation($infos)) . '">'
+            . 'Réserver une table</a>';
     }
 
     // L'itinéraire compte autant que l'appel : le restaurant est dans un
@@ -639,12 +719,8 @@ function rendre_coordonnees(array $infos): string
     $maps = lien_externe($infos, 'maps');
 
     if ($maps !== '') {
-        $actions[] = '<a class="bouton bouton--discret" href="' . e($maps) . '"'
+        $venir[] = '<a class="bouton bouton--discret" href="' . e($maps) . '"'
             . ' target="_blank" rel="noopener">Itinéraire</a>';
-    }
-
-    if (reservation_active($infos)) {
-        $actions[] = '<a class="bouton bouton--discret" href="reservation.php">Réserver une table</a>';
     }
 
     // Instagram avec les autres actions : c'est là que vivent les photos d'un
@@ -652,14 +728,21 @@ function rendre_coordonnees(array $infos): string
     $instagram = lien_externe($infos, 'instagram');
 
     if ($instagram !== '') {
-        $actions[] = '<a class="bouton bouton--discret" href="' . e($instagram) . '"'
+        $venir[] = '<a class="bouton bouton--discret" href="' . e($instagram) . '"'
             . ' target="_blank" rel="noopener me">Instagram</a>';
     }
 
-    if ($actions !== []) {
-        $bloc[] = '      <p class="coordonnees__appel">' . implode("\n        ", $actions) . '</p>';
-    }
+    $rangees = array_filter([$table, $venir]);
 
+    if ($rangees !== []) {
+        $bloc[] = '      <div class="coordonnees__actions">';
+
+        foreach ($rangees as $rangee) {
+            $bloc[] = '        <p class="coordonnees__rangee">' . implode("\n          ", $rangee) . '</p>';
+        }
+
+        $bloc[] = '      </div>';
+    }
 
     $bloc[] = '    </section>';
 

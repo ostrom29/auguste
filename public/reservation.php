@@ -45,6 +45,15 @@ function traiter_requete(): void
 {
     $gabarit = charger_gabarit();
 
+    // Un prestataire prend les réservations : on y renvoie, plutôt que
+    // d'afficher un formulaire en double ou une porte fermée. 302 et non 301,
+    // pour que le changement de prestataire ne reste pas figé dans les caches.
+    if (($gabarit['reservation_externe'] ?? '') !== '') {
+        header('Location: ' . $gabarit['reservation_externe'], true, 302);
+
+        return;
+    }
+
     // La prise de réservation est éteinte : la page se ferme, mais tout le
     // code reste en place. Une ligne « reservation » à « oui » dans l'onglet
     // infos la rallume, sans rien redéployer.

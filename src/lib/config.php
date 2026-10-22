@@ -12,7 +12,8 @@ declare(strict_types=1);
  *
  * @return array{
  *     csv_carte: string, csv_infos: string,
- *     sortie_dossier: string, secret_publication: string, url_site: string
+ *     sortie_dossier: string, secret_publication: string, url_site: string,
+ *     courriel_alertes: string
  * }
  */
 function config_charger(string $racine): array
@@ -29,6 +30,10 @@ function config_charger(string $racine): array
         // canoniques, Open Graph et le JSON-LD ont besoin d'URL absolues :
         // elles sont lues par des machines qui ne savent pas d'où vient la page.
         'url_site' => '',
+        // Qui prévenir quand la publication automatique échoue. Plusieurs
+        // adresses se séparent par des virgules. Vide : personne, et l'échec
+        // ne se voit que dans la sortie de la tâche cron.
+        'courriel_alertes' => '',
     ];
 
     $chemin = $racine . '/config.php';

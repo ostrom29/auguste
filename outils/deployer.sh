@@ -17,6 +17,8 @@ HOTE=${AUGUSTE_HOTE:-cpe0005013@pf-014.whm.fr-par.scw.cloud}
 CLE=${AUGUSTE_CLE:-$HOME/.ssh/auguste_deploy}
 DISTANT=${AUGUSTE_DISTANT:-/home/cpe0005013}
 SITE=${AUGUSTE_SITE:-https://chezauguste.com}
+# Chemin complet : cron ne connaît pas le PATH d'une session SSH.
+PHP_DISTANT=${AUGUSTE_PHP:-/usr/local/bin/php}
 
 SSH="ssh -i $CLE -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
 
@@ -72,6 +74,24 @@ $SSH "$HOTE" "cd $DISTANT/auguste && php src/build.php" || {
   echo "Le build distant a échoué — le site en place n'a pas été modifié." >&2
   exit 1
 }
+
+titre "Publication automatique"
+# Toutes les dix minutes, le serveur reprend le Sheet : le restaurateur n'a
+# plus à cliquer « Publier », ce que son téléphone ne lui permet pas.
+# Idempotent : la ligne n'est ajoutée que si elle manque, et les autres tâches
+# du compte ne sont pas touchées.
+TACHE="*/10 * * * * $PHP_DISTANT $DISTANT/auguste/src/automatique.php"
+if $SSH "$HOTE" "crontab -l 2>/dev/null | grep -qF 'auguste/src/automatique.php'"; then
+  echo "  tâche cron déjà en place"
+else
+  $SSH "$HOTE" "(crontab -l 2>/dev/null; echo '$TACHE') | crontab -"
+  echo "  tâche cron ajoutée : $TACHE"
+fi
+
+# Sans destinataire, un échec ne préviendrait personne.
+if ! $SSH "$HOTE" "grep -q \"'courriel_alertes'\" $DISTANT/auguste/config.php"; then
+  echo "  attention : pas de « courriel_alertes » dans config.php, un échec ne préviendra personne"
+fi
 
 titre "Contrôle en HTTPS"
 for chemin in / /carte.html /reservation.php /contact.php /mentions-legales.html \

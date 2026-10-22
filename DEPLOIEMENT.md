@@ -102,8 +102,15 @@ Regardez les logs d'erreur dans cPanel.
 
 ## Les mises à jour suivantes
 
-Le restaurateur ne déploie jamais rien : il clique « Publier » dans son Sheet
-et le serveur régénère `carte.html` tout seul.
+Le restaurateur ne déploie jamais rien, et ne clique même plus : une tâche
+cron relance `src/automatique.php` toutes les dix minutes, qui reprend le Sheet
+et régénère le site. Le bouton « Publier » reste là pour publier tout de suite
+depuis un ordinateur. Voir ETAT.md, « La publication automatique ».
+
+    */10 * * * * /usr/local/bin/php /home/cpe0005013/auguste/src/automatique.php
+
+`outils/deployer.sh` l'installe s'il ne la trouve pas. Les alertes partent à
+`courriel_alertes`, une clé de `config.php` à renseigner sur le serveur.
 
 Vous ne redéposez des fichiers que lorsque **le code ou la CSS** changent.
 Lancez `./src/verif.sh` avant, refaites les archives avec

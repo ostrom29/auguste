@@ -131,7 +131,7 @@ function resumer(array $resultat): void
 
     printf("Source     : %s\n", $resultat['source']);
     printf(
-        "Lignes     : %d %s, %d %s, %d %s (actif ≠ oui)\n",
+        "Lignes     : %d %s, %d %s, %d %s (actif non coché)\n",
         $resultat['lues'],
         accord($resultat['lues'], 'lue'),
         $resultat['actives'],

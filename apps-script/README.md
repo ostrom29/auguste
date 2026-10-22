@@ -7,6 +7,10 @@ son tableur.
 Le script n'a aucune intelligence : il appelle `publier.php` sur l'hébergement
 et affiche sa réponse. Toute la validation reste côté serveur.
 
+Le bouton n'est plus nécessaire : le serveur reprend le Sheet de lui-même toutes
+les dix minutes. Il sert à publier tout de suite, depuis un ordinateur — le menu
+**Site** n'apparaît pas dans l'appli Google Sheets pour téléphone.
+
 ## Installation, une seule fois
 
 1. Dans le Sheet : **Extensions > Apps Script**.
