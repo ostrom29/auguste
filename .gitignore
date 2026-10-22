@@ -14,7 +14,7 @@
 /public/gabarit.php
 /public/robots.txt
 /public/sitemap.xml
-/public/r/
+/public/r.php
 
 # Originaux des images : lourds, et retraités par outils/images.py
 # vers public/img/, qui est versionné.

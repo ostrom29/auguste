@@ -99,8 +99,13 @@ function generer(string $source, string $racine): array
 
         // Raccourci de réservation : chezauguste.com/r, assez court pour être
         // dicté au téléphone ou imprimé sur une carte de visite.
+        //
+        // Un fichier et non un dossier « r » : le serveur redirige toute
+        // adresse de dossier vers sa version suivie d'une barre oblique, et
+        // cette redirection passe avant les règles de réécriture. Un dossier
+        // coûtait donc un aller-retour de plus à chaque visite.
         if (reservation_active($infos)) {
-            $pages['r/index.php'] = rendre_raccourci(lien_reservation($infos));
+            $pages['r.php'] = rendre_raccourci(lien_reservation($infos));
         }
 
         foreach ($pages as $fichier => $contenu) {

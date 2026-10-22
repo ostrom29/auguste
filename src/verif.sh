@@ -255,9 +255,9 @@ dans confidentialite.html 'reservation.laddition.com' "la confidentialité nomme
 # Le raccourci /r est assez court pour être dicté au téléphone. Il doit mener
 # là où mène le menu, et par une redirection temporaire : une permanente
 # resterait en cache le jour d'un changement de prestataire.
-if [ -f public/r/index.php ] \
-  && grep -q "Location: https://reservation.laddition.com/" public/r/index.php \
-  && grep -q '302' public/r/index.php; then
+if [ -f public/r.php ] \
+  && grep -q "Location: https://reservation.laddition.com/" public/r.php \
+  && grep -q '302' public/r.php; then
   vert "le raccourci /r renvoie chez le prestataire, en redirection temporaire"
 else
   rouge "le raccourci /r est absent ou pointe ailleurs"

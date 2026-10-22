@@ -23,6 +23,13 @@
   # Tout passe en HTTPS. Le certificat existe, autant s'en servir.
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # Les deux raccourcis de réservation, servis sans détour. Le fichier
+  # s'appelle r.php et non r/index.php : le serveur redirige toute adresse de
+  # dossier vers sa version suivie d'une barre oblique, avant même d'appliquer
+  # ces règles, ce qui coûtait un aller-retour de plus à chaque visite.
+  RewriteRule ^r/?$ /r.php [L]
+  RewriteRule ^reserver/?$ /r.php [L]
 </IfModule>
 
 # Le texte se compresse à environ un tiers de sa taille. C'est la plus grosse
